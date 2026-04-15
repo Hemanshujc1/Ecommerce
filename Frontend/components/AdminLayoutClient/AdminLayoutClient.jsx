@@ -11,13 +11,19 @@ export default function AdminLayoutClient({ children }) {
   const { admin, loading } = useAuth();
   const router = useRouter();
 
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
-    if (!loading && !admin) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && !loading && !admin) {
       router.push("/adminAuth/login");
     }
-  }, [admin, loading, router]);
+  }, [admin, loading, router, isMounted]);
 
-  if (loading) {
+  if (!isMounted || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
