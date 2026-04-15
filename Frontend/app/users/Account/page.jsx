@@ -56,7 +56,7 @@ const Page = () => {
           </div>
         );
       case "orders":
-        return <OrderCard />;
+        return <OrderCard userId={userProfile?._id || userProfile?.id} />;
       case "editprofile":
         return <EditProfileForm />;
       case "analytics":

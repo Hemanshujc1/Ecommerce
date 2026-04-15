@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getUserOrders, cancelOrder, createReturnExchangeRequest, getOrderById } from '@/lib/api';
 import { FaEye, FaTimes, FaUndo, FaExchangeAlt, FaShippingFast, FaCheckCircle } from 'react-icons/fa';
+import Link from 'next/link';
 
 const OrderCard = ({ userId }) => {
   const [orders, setOrders] = useState([]);
@@ -15,6 +16,8 @@ const OrderCard = ({ userId }) => {
   useEffect(() => {
     if (userId) {
       fetchUserOrders();
+    } else {
+      setLoading(false);
     }
   }, [userId]);
 
@@ -174,8 +177,14 @@ const OrderCard = ({ userId }) => {
       {filteredOrders.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-400 text-6xl mb-4">📦</div>
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Orders Found</h3>
-          <p className="text-gray-500">You haven't placed any orders yet.</p>
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Orders Yet</h3>
+          <p className="text-gray-500 mb-6">You haven't placed any orders yet.</p>
+          <Link 
+            href="/users/Products" 
+            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Start Shopping
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
