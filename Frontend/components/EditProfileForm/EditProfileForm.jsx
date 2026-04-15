@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaUser, FaEnvelope, FaLock, FaCalendarAlt, FaVenusMars, FaUserTag, FaSave, FaCheck, FaExclamationTriangle } from "react-icons/fa";
+import { API_BASE_URL } from "@/lib/api.config";
 
 const EditProfileForm = () => {
   const [formData, setFormData] = useState({
@@ -19,7 +20,7 @@ const EditProfileForm = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const res = await fetch("http://localhost:4001/users/profile", {
+        const res = await fetch(`${API_BASE_URL}/users/profile`, {
           method: "GET",
           credentials: "include",
         });
@@ -61,7 +62,7 @@ const EditProfileForm = () => {
     setErrorMsg("");
 
     try {
-      const res = await fetch("http://localhost:4001/users/profile", {
+      const res = await fetch(`${API_BASE_URL}/users/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -1,56 +1,106 @@
-const db = require("../db/db");
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/database");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken"); 
+const jwt = require("jsonwebtoken");
 
-const createUser = async (userData, callback) => {
-  try {
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-
-    const sql = `
-      INSERT INTO userinfo (name, username, gender, age, email, password) 
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-      userData.name,
-      userData.username,
-      userData.gender,
-      userData.age,
-      userData.email,
-      hashedPassword,
-    ];
-
-    db.query(sql, values, callback);
-  } catch (error) {
-    callback(error);
+const User = sequelize.define("User", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  username: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  gender: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  age: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  is_blocked: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  role: {
+    type: DataTypes.ENUM("customer", "admin", "main_admin"),
+    defaultValue: "customer",
   }
+}, {
+  tableName: "userinfo",
+  timestamps: false,
+});
+
+// Hooks for hasing password before save
+User.beforeCreate(async (user) => {
+  if (user.password) {
+    user.password = await bcrypt.hash(user.password, 10);
+  }
+});
+
+// Instance methods
+User.prototype.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const comparePassword = async (enteredPassword, hashedPassword) => {
-  return await bcrypt.compare(enteredPassword, hashedPassword);
-};
-
-const generateAuthToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+User.prototype.generateAuthToken = function () {
+  return jwt.sign({ id: this.id }, process.env.JWT_SECRET, {
     expiresIn: "24h",
   });
 };
-const findUserByEmail = (email, callback) => {
-  const sql = "SELECT * FROM userinfo WHERE email = ?";
-  db.query(sql, [email], callback);
-};
-const getUserById = (id, callback) => {
-  const sql = "SELECT * FROM userinfo WHERE id = ?";
-  db.query(sql, [id], callback);
-};
 
+const Lead = sequelize.define("Lead", {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  type: {
+    type: DataTypes.ENUM("enquiry", "newsletter"),
+    allowNull: false,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  message: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  status: {
+    type: DataTypes.ENUM("new", "processed", "archived"),
+    defaultValue: "new",
+  }
+}, {
+  tableName: "leads",
+  timestamps: true,
+  createdAt: "created_at",
+  updatedAt: "updated_at",
+  indexes: [
+    { fields: ['type'] },
+    { fields: ['email'] }
+  ]
+});
 
-
-
-module.exports = {
-  createUser,
-  comparePassword,
-  generateAuthToken,
-  findUserByEmail,
-  getUserById
-};
+module.exports = { User, Lead };

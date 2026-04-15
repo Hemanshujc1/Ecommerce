@@ -8,7 +8,7 @@ const page = () => {
     <div className="bg-gray-50 min-h-screen py-12 px-6">
       <div className="max-w-6xl mx-auto space-y-12">
         <section className="text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">About StreetBite</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4">About StreetBite</h1>
           <p className="text-lg md:text-xl text-gray-600">
             Welcome to <strong>StreetBite</strong> – where flavor meets innovation. We’re not just an ecommerce platform;
             we’re a movement to make quality street-style food and lifestyle accessible online.

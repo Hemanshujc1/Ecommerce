@@ -26,8 +26,8 @@ const WishlistCard = ({ onWishlistUpdate }) => {
     try {
       const userId = getUserId();
       const response = await getUserWishlist(userId);
-      if (response && response.success) {
-        setWishlistItems(response.wishlist || []);
+      if (response && response.statusCode === 200) {
+        setWishlistItems(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
       console.error("Error loading wishlist:", error);
@@ -107,9 +107,7 @@ const WishlistCard = ({ onWishlistUpdate }) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {wishlistItems.map((item) => {
-            const imageUrl = item.main_image 
-              ? `http://localhost:4001/upload${item.main_image.startsWith('/') ? '' : '/'}${item.main_image}`
-              : '/placeholder-image.jpg';
+            const imageUrl = getImageUrl(item.main_image);
 
             return (
               <div

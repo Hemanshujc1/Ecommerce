@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { API_BASE_URL } from "@/lib/api.config";
 
 const page = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ const page = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:4001/users/unsubscribe", {
+      const res = await fetch(`${API_BASE_URL}/users/unsubscribe`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

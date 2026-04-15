@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const blogController = require("../controllers/blog.controller");
-const db = require("../db/mysql12");
+const { sequelize } = require("../models");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -24,12 +24,10 @@ router.delete("/:id", blogController.deleteBlog);
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const connection = await db.createConnection();
-    const [rows] = await connection.execute(
+    const [rows] = await sequelize.query(
       "SELECT * FROM blogs WHERE id = ?",
-      [id]
+      { replacements: [id] }
     );
-    await connection.end();
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Blog not found" });
@@ -53,21 +51,17 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   const image = req.file?.filename;
 
   try {
-    const connection = await db.createConnection();
-
-    let query = "UPDATE blogs SET title = ?,short_description = ?, description = ?, date = ?";
-    const values = [title,short_description, description, date];
+    let query = "UPDATE blogs SET title = :title, short_description = :short_description, description = :description, date = :date";
+    const replacements = { title, short_description, description, date, id };
 
     if (image) {
-      query += ", image = ?";
-      values.push(image);
+      query += ", image = :image";
+      replacements.image = image;
     }
 
-    query += " WHERE id = ?";
-    values.push(id);
+    query += " WHERE id = :id";
 
-    const [result] = await connection.execute(query, values);
-    await connection.end();
+    await sequelize.query(query, { replacements });
 
     res.status(200).json({ message: "Blog updated successfully" });
   } catch (err) {

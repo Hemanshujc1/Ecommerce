@@ -1,8 +1,6 @@
 "use client";
 import React, { useState } from "react";
-
-
-const AddProductPage = () => {
+import { API_BASE_URL } from "@/lib/api.config";const AddProductPage = () => {
   const [currentTab, setCurrentTab] = useState(1);
   // step 1 const
   const [generalData, setGeneralData] = useState({
@@ -168,7 +166,7 @@ const AddProductPage = () => {
     });
 
     try {
-      const res = await fetch("http://localhost:4001/products/add", {
+      const res = await fetch(`${API_BASE_URL}/products/add`, {
         method: "POST",
         body: formData,
       });
@@ -182,10 +180,10 @@ const AddProductPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Add Products</h1>
+    <div className="p-3 md:p-6 max-w-6xl mx-auto">
+      <h1 className="text-lg md:text-2xl font-bold mb-6">Add Products</h1>
       {/* Tabs */}
-      <div className="flex mb-6 space-x-2">
+      <div className="flex flex-wrap mb-6 gap-2">
         <button
           onClick={() => setCurrentTab(1)}
           className={`px-4 py-2 border ${

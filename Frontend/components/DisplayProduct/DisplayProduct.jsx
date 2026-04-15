@@ -165,20 +165,22 @@ const DisplayProduct = () => {
       try {
         // Load user's cart
         const cartResponse = await getUserCart(userId);
-        if (cartResponse && cartResponse.success) {
+        if (cartResponse && cartResponse.statusCode === 200) {
           const cartData = {};
-          cartResponse.cart.forEach((item) => {
-            cartData[item.productId] = item.quantity;
+          const cartList = Array.isArray(cartResponse.data) ? cartResponse.data : [];
+          cartList.forEach((item) => {
+            cartData[item.productId || item.product_id] = item.quantity;
           });
           setCartQuantities(cartData);
         }
 
         // Load user's wishlist
         const wishlistResponse = await getUserWishlist(userId);
-        if (wishlistResponse && wishlistResponse.success) {
+        if (wishlistResponse && wishlistResponse.statusCode === 200) {
           const wishlistData = {};
-          wishlistResponse.wishlist.forEach((item) => {
-            wishlistData[item.productId] = true;
+          const wishlistList = Array.isArray(wishlistResponse.data) ? wishlistResponse.data : [];
+          wishlistList.forEach((item) => {
+            wishlistData[item.productId || item.product_id] = true;
           });
           setWishlist(wishlistData);
         }
@@ -193,8 +195,8 @@ const DisplayProduct = () => {
       setLoading(true);
       setError(null);
       const response = await fetchAllProducts();
-      if (response && response.success) {
-        setProducts(response.products || []);
+      if (response && (response.statusCode === 200 || response.data)) {
+        setProducts(Array.isArray(response.data) ? response.data : []);
       } else {
         setError("Failed to load products");
       }
@@ -399,7 +401,7 @@ const DisplayProduct = () => {
         filteredProducts={filteredProducts.length}
       />
 
-      <div className="px-10">
+      <div className="px-4 sm:px-6 lg:px-10">
         {products.length === 0 ? (
           <div className="text-center text-gray-600 mt-10">
             No products available.
@@ -424,12 +426,7 @@ const DisplayProduct = () => {
             const quantity = cartQuantities[id] || 0;
             const inWishlist = wishlist[id] || false;
 
-            const imageUrl =
-              product.main_image && typeof product.main_image === "string"
-                ? product.main_image.startsWith("http")
-                  ? product.main_image
-                  : `http://localhost:4001/upload/${product.main_image}`
-                : "/placeholder-image.jpg";
+            const imageUrl = getImageUrl(product.main_image);
 
             return (
               <div

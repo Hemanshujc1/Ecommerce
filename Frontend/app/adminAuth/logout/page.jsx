@@ -3,46 +3,27 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/api.config";
+import { clearAdminSession } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 
 const AdminLogoutPage = () => {
   const router = useRouter();
+  const { logoutAdmin } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    if (isLoggingOut) return; // Prevent multiple clicks
-    
+    if (isLoggingOut) return;
     setIsLoggingOut(true);
-    
     try {
-      // Clear client-side storage first
-      localStorage.removeItem("token");
-      sessionStorage.clear();
-      
-      // Make the logout API call
-      const res = await fetch("http://localhost:4001/admins/logout", {
+      await fetch(`${API_BASE_URL}/admins/logout`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
         credentials: "include",
       });
-  
-      // Don't throw error if logout fails on server - still redirect
-      if (res.ok) {
-        await res.json();
-      }
-      
-      // Force a complete page refresh and redirect to ensure clean logout
-      window.location.href = "/adminAuth/logoutcnf";
-      
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Clear client storage even if server call fails
-      localStorage.removeItem("token");
-      sessionStorage.clear();
-      // Force redirect with window.location for complete refresh
-      window.location.href = "/adminAuth/logoutcnf";
-    }
+    } catch {}
+    clearAdminSession();
+    logoutAdmin();
+    window.location.href = "/adminAuth/logoutcnf";
   };
 
   return (

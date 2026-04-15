@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api.config";
 
 const Page = () => {
   const router = useRouter();
@@ -20,7 +21,7 @@ const Page = () => {
    // setError("");
 
     try {
-      const res = await fetch("http://localhost:4001/users/register", {
+      const res = await fetch(`${API_BASE_URL}/users/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +97,7 @@ const Page = () => {
 
             {/* Gender */}
             <div className="flex flex-col gap-2">
-              <label lassName="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700">
                 Gender
               </label>
               <select

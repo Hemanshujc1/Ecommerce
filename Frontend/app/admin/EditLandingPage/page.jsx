@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/lib/api.config";
 
-const Page = () => {
+const EditLandingPage = () => {
   const [landingTitle, setLandingTitle] = useState("");
   const [landingDescription, setLandingDescription] = useState("");
   const [collections, setCollections] = useState([]);
@@ -13,7 +14,7 @@ const Page = () => {
   // Fetch available products
   const fetchAvailableProducts = async () => {
     try {
-      const res = await fetch("http://localhost:4001/products");
+      const res = await fetch(`${API_BASE_URL}/products`);
       const data = await res.json();
       if (data.success) {
         setAvailableProducts(data.products || []);
@@ -87,7 +88,7 @@ const Page = () => {
     try {
       setSaveMessage("Saving changes...");
       
-      const res = await fetch("http://localhost:4001/landing", {
+      const res = await fetch(`${API_BASE_URL}/landing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -111,7 +112,7 @@ const Page = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:4001/landing");
+        const res = await fetch(`${API_BASE_URL}/landing`);
         const data = await res.json();
         setLandingTitle(data.title || "");
         setLandingDescription(data.description || "");
@@ -129,8 +130,8 @@ const Page = () => {
   
 
   return (
-    <div className="p-6 max-w-4xl space-y-6">
-      <h1 className="text-2xl font-bold">Edit Landing Page</h1>
+    <div className="p-3 md:p-6 max-w-4xl w-full space-y-6">
+      <h1 className="text-lg md:text-2xl font-bold">Edit Landing Page</h1>
 
       <div className="bg-white p-4 rounded shadow space-y-4">
         <input
@@ -182,7 +183,7 @@ const Page = () => {
                 {col.img && (
                   <div className="w-full h-48 bg-gray-100 rounded overflow-hidden mb-4">
                     <img
-                      src={`http://localhost:4001/upload${col.img.startsWith('/') ? '' : '/'}${col.img}`}
+                      src={getImageUrl(col.img)}
                       alt={col.title}
                       className="w-full h-full object-cover"
                     />
@@ -301,7 +302,7 @@ const Page = () => {
                     <div className="w-full h-32 bg-gray-100 rounded overflow-hidden mb-3">
                       {product.main_image ? (
                         <img
-                          src={`http://localhost:4001/upload${product.main_image.startsWith('/') ? '' : '/'}${product.main_image}`}
+                          src={getImageUrl(product.main_image)}
                           alt={product.product_name}
                           className="w-full h-full object-cover"
                         />
@@ -371,4 +372,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default EditLandingPage;

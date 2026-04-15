@@ -1,42 +1,35 @@
-const adminModel = require("../models/admin.model");
+const { User } = require("../models");
 
 module.exports.createAdmin = async ({
   name,
   email,
   password,
-  role,
+  role = 'admin',
 }) => {
   if (!name || !email || !password) {
     throw new Error("All fields are required");
   }
 
-  return new Promise((resolve, reject) => {
-    adminModel.createAdmin(
-      {
-        name,
-        email,
-        password,
-        role,
-      },
-      (err, result) => {
-        if (err) return reject(err);
-        resolve(result);
-      }
-    );
+  // We reuse the User model for admins, but with an admin-related role
+  return await User.create({
+    name,
+    email,
+    password,
+    role,
+    // Provide a default username for admins if needed by the User model
+    username: email.split('@')[0] + '_admin' 
   });
 };
 
-module.exports.generateAuthToken = adminModel.generateAuthToken;
+module.exports.generateAuthToken = (admin) => {
+  return admin.generateAuthToken();
+};
 
-module.exports.hashPassword = adminModel.hashPassword || require("bcrypt").hash;
-module.exports.comparePassword = adminModel.comparePassword; 
+module.exports.comparePassword = async (password, adminPassword) => {
+  const bcrypt = require("bcrypt");
+  return await bcrypt.compare(password, adminPassword);
+};
+
 module.exports.findAdminByEmail = async (email) => {
-  return new Promise((resolve, reject) => {
-    adminModel.findAdminByEmail(email, (err, results) => {
-      if (err) return reject(err);
-      if (results.length === 0) return resolve(null);
-      resolve(results[0]);
-    });
-  });
+  return await User.findOne({ where: { email } });
 };
-

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import AdminSearchFilter from "@/components/AdminSearchFilter/AdminSearchFilter";
 import AdminPagination from "@/components/AdminPagination/AdminPagination";
+import { API_BASE_URL } from "@/lib/api.config";import AdminTable from "@/components/AdminTable/AdminTable";
 
 const Page = () => {
   const [enquiries, setEnquiries] = useState([]);
@@ -20,12 +21,48 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
 
+  const enquiryTableColumns = [
+    { header: "Name", accessor: "name" },
+    { header: "Email", accessor: "email" },
+    { 
+      header: "Message", 
+      render: (entry) => <div className="max-w-xs truncate" title={entry.message}>{entry.message}</div> 
+    },
+    {
+      header: "Source",
+      render: (entry) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          entry.source === 'Contact Form' 
+            ? 'bg-blue-100 text-blue-800' 
+            : 'bg-green-100 text-green-800'
+        }`}>
+          {entry.source}
+        </span>
+      ),
+    },
+    {
+      header: "Date",
+      render: (entry) => (entry.date ? new Date(entry.date).toLocaleDateString() : '-'),
+    },
+    {
+      header: "Actions",
+      render: (entry) => (
+        <button
+          onClick={() => handleDelete(entry.type, entry.id)}
+          className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50 transition-colors"
+        >
+          Delete
+        </button>
+      ),
+    },
+  ];
+
   // Fetch enquiries from /users/enquiry
   const fetchEnquiries = async () => {
     try {
-      const res = await fetch("http://localhost:4001/users/Enquiry");
+      const res = await fetch(`${API_BASE_URL}/users/Enquiry`);
       const data = await res.json();
-      setEnquiries(data);
+      setEnquiries(data.data || []);
     } catch (err) {
       console.error("Error fetching enquiries:", err);
       setError("Failed to fetch enquiries");
@@ -35,9 +72,9 @@ const Page = () => {
   // Fetch newsletters from /users/newsletter
   const fetchNewsletters = async () => {
     try {
-      const res = await fetch("http://localhost:4001/users/Newsletter");
+      const res = await fetch(`${API_BASE_URL}/users/Newsletter`);
       const data = await res.json();
-      setNewsletters(data);
+      setNewsletters(data.data || []);
     } catch (err) {
       console.error("Error fetching newsletters:", err);
       setError("Failed to fetch newsletter subscriptions");
@@ -60,8 +97,8 @@ const Page = () => {
     try {
       const url =
         type === "enquiry"
-          ? `http://localhost:4001/users/allEnquiry/${id}`
-          : `http://localhost:4001/users/Newsletter/${id}`;
+          ? `${API_BASE_URL}/users/allEnquiry/${id}`
+          : `${API_BASE_URL}/users/Newsletter/${id}`;
       const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
 
@@ -183,7 +220,7 @@ const Page = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -192,9 +229,9 @@ const Page = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Enquiry Management</h1>
+    <div className="p-3 md:p-6">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
+        <h1 className="text-lg md:text-2xl font-bold">Enquiry Management</h1>
         <div className="text-sm text-gray-600">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
         </div>
@@ -248,49 +285,11 @@ const Page = () => {
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto bg-white rounded-lg shadow">
-            <table className="w-full table-auto">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentData.map((entry) => (
-                  <tr key={`${entry.type}-${entry.id}`} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{entry.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">{entry.message}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        entry.source === 'Contact Form' 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {entry.source}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entry.date ? new Date(entry.date).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleDelete(entry.type, entry.id)}
-                        className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable 
+            columns={enquiryTableColumns} 
+            data={currentData} 
+            emptyMessage={getRawData().length > 0 ? "No entries match your filters" : "No records found"}
+          />
 
           {/* Pagination */}
           <AdminPagination

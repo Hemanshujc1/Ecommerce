@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import AdminTable from "@/components/AdminTable/AdminTable";
+import { API_BASE_URL } from "@/lib/api.config";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
@@ -18,6 +20,49 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
 
+  const userTableColumns = [
+    { header: "ID", accessor: "id" },
+    { header: "Name", accessor: "name" },
+    { header: "Email", accessor: "email" },
+    {
+      header: "Status",
+      render: (user) => (
+        user.is_blocked ? (
+          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+            Blocked
+          </span>
+        ) : (
+          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+            Active
+          </span>
+        )
+      ),
+    },
+    {
+      header: "Actions",
+      render: (user) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => toggleBlockUser(user.id)}
+            className={`px-3 py-1 rounded text-sm ${
+              user.is_blocked
+                ? "bg-green-500 text-white hover:bg-green-600"
+                : "bg-red-500 text-white hover:bg-red-600"
+            }`}
+          >
+            {user.is_blocked ? "Unblock" : "Block"}
+          </button>
+          <button
+            onClick={() => sendNotification(user)}
+            className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
+          >
+            Send Email
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -29,8 +74,8 @@ const Page = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:4001/users/all");
-      setUsers(res.data);
+      const res = await axios.get(`${API_BASE_URL}/users/all`);
+      setUsers(res.data.data || []);
     } catch (err) {
       console.error("Failed to fetch users:", err);
     } finally {
@@ -78,13 +123,7 @@ const Page = () => {
 
   const toggleBlockUser = async (id) => {
     try {
-      await axios.patch(`http://localhost:4001/users/block/${id}`,{
-        method:"PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
+      await axios.patch(`${API_BASE_URL}/users/block/${id}`);
     
       fetchUsers(); // Refresh the list
     } catch (err) {
@@ -94,7 +133,7 @@ const Page = () => {
 
   const sendNotification = async (user) => {
     try {
-      await axios.post("http://localhost:4001/users/send-discount", {
+      await axios.post(`${API_BASE_URL}/users/send-discount`, {
         email: user.email,
       });
       alert(`Discount email sent to ${user.email}`);
@@ -123,7 +162,7 @@ const Page = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -132,9 +171,9 @@ const Page = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Users</h1>
+    <div className="p-3 md:p-6">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
+        <h1 className="text-lg md:text-2xl font-bold">Manage Users</h1>
         <div className="text-sm text-gray-600">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
         </div>
@@ -218,57 +257,11 @@ const Page = () => {
         </div>
       ) : (
         <>
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <table className="w-full table-auto">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {user.is_blocked ? (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                          Blocked
-                        </span>
-                      ) : (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => toggleBlockUser(user.id)}
-                        className={`px-3 py-1 rounded text-sm ${
-                          user.is_blocked
-                            ? "bg-green-500 text-white hover:bg-green-600"
-                            : "bg-red-500 text-white hover:bg-red-600"
-                        }`}
-                      >
-                        {user.is_blocked ? "Unblock" : "Block"}
-                      </button>
-                      <button
-                        onClick={() => sendNotification(user)}
-                        className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-                      >
-                        Send Email
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable 
+            columns={userTableColumns} 
+            data={currentUsers} 
+            emptyMessage={users.length > 0 ? "No users match your filters" : "No users found"}
+          />
 
           {/* Pagination */}
           {totalPages > 1 && (

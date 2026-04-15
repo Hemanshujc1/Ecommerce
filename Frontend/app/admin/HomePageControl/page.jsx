@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/lib/api.config";
+import { getImageUrl } from "@/lib/image.helper";
 
-const page = () => {
+const HomePageControl = () => {
   const [sections, setSections] = useState([]);
   const [saveMessage, setSaveMessage] = useState("");
   const [availableProducts, setAvailableProducts] = useState([]);
@@ -12,7 +14,7 @@ const page = () => {
   // Save API
   const saveSections = async (updatedSections, showMessage = true) => {
     try {
-      const res = await fetch("http://localhost:4001/home-products", {
+      const res = await fetch(`${API_BASE_URL}/home-products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sections: updatedSections }),
@@ -121,7 +123,7 @@ const page = () => {
   // Fetch available products
   const fetchAvailableProducts = async () => {
     try {
-      const res = await fetch("http://localhost:4001/products");
+      const res = await fetch(`${API_BASE_URL}/products`);
       const data = await res.json();
       if (data.success) {
         setAvailableProducts(data.products || []);
@@ -136,7 +138,7 @@ const page = () => {
   useEffect(() => {
     const fetchSections = async () => {
       try {
-        const res = await fetch("http://localhost:4001/home-products");
+        const res = await fetch(`${API_BASE_URL}/home-products`);
         const data = await res.json();
         const parsed =
           typeof data.sections === "string"
@@ -155,7 +157,7 @@ const page = () => {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="p-3 md:p-6">
       <h1 className="text-2xl font-bold mb-6">Homepage Content Management</h1>
 
       {/* Confirmation Message */}
@@ -238,7 +240,7 @@ const page = () => {
                       {product.img && (
                         <div className="w-full h-32 bg-white rounded overflow-hidden">
                           <img
-                            src={`http://localhost:4001/upload${product.img.startsWith('/') ? '' : '/'}${product.img}`}
+                            src={getImageUrl(product.img)}
                             alt={product.productname}
                             className="w-full h-full object-cover"
                           />
@@ -333,7 +335,7 @@ const page = () => {
                     <div className="w-full h-32 bg-gray-100 rounded overflow-hidden mb-3">
                       {product.main_image ? (
                         <img
-                          src={`http://localhost:4001/upload${product.main_image.startsWith('/') ? '' : '/'}${product.main_image}`}
+                          src={getImageUrl(product.main_image)}
                           alt={product.product_name}
                           className="w-full h-full object-cover"
                         />
@@ -403,4 +405,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default HomePageControl;

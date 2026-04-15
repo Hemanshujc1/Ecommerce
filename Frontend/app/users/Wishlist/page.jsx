@@ -4,18 +4,21 @@ import React, { useEffect, useState } from "react";
 import NewsLetter from "@/components/NewsLetter/NewsLetter";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import WishlistCard from "@/components/WishlistCard/WishlistCard";
+import { API_BASE_URL } from "@/lib/api.config";
+import Link from "next/link";
 
 const Page = () => {
   const [productSections, setProductSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [wishlistUpdateTrigger, setWishlistUpdateTrigger] = useState(0);
 
   useEffect(() => {
     const fetchProductSections = async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch("http://localhost:4001/home-products");
+        const res = await fetch(`${API_BASE_URL}/home-products`);
         const data = await res.json();
 
         let sections = [];
@@ -50,7 +53,7 @@ const Page = () => {
 
   return (
     <div className="flex flex-col gap-12 bg-gray-50 text-black min-h-screen">
-      <h1 className="text-4xl font-bold text-center uppercase tracking-widest py-16 bg-white">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center uppercase tracking-widest py-10 sm:py-16 bg-white">
         Your Wishlist
       </h1>
 

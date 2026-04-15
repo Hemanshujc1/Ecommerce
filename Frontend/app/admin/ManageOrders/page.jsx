@@ -9,6 +9,7 @@ import {
   updateReturnExchangeStatus,
   getOrderStats 
 } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api.config";
 import { 
   FaEye, 
   FaEdit, 
@@ -22,6 +23,7 @@ import {
   FaDownload,
   FaChartBar
 } from "react-icons/fa";
+import AdminTable from "@/components/AdminTable/AdminTable";
 
 const ManageOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -39,6 +41,120 @@ const ManageOrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  const orderTableColumns = [
+    { header: "Order ID", render: (order) => <span className="font-medium text-gray-900">#{order.id}</span> },
+    { 
+      header: "Customer", 
+      render: (order) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{order.user_name || 'N/A'}</div>
+          <div className="text-sm text-gray-500">{order.user_email || 'N/A'}</div>
+        </div>
+      )
+    },
+    { 
+      header: "Date", 
+      render: (order) => new Date(order.created_at).toLocaleDateString('en-IN') 
+    },
+    { 
+      header: "Amount", 
+      render: (order) => <span className="font-medium text-gray-900">₹{order.total_amount}</span> 
+    },
+    { 
+      header: "Status", 
+      render: (order) => (
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(order.order_status)}`}>
+          {getStatusIcon(order.order_status)}
+          {order.order_status}
+        </div>
+      ) 
+    },
+    { header: "Payment", accessor: "payment_method" },
+    { 
+      header: "Actions", 
+      render: (order) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleViewOrder(order.id)}
+            className="text-blue-600 hover:text-blue-900 p-1"
+            title="View Details"
+          >
+            <FaEye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              setSelectedOrder(order);
+              setModalType('status');
+              setNewStatus(order.order_status);
+              setShowModal(true);
+            }}
+            className="text-green-600 hover:text-green-900 p-1"
+            title="Update Status"
+          >
+            <FaEdit className="w-4 h-4" />
+          </button>
+        </div>
+      ) 
+    },
+  ];
+
+  const returnTableColumns = [
+    { header: "Request ID", render: (request) => <span className="font-medium text-gray-900">#{request.id}</span> },
+    { header: "Order ID", render: (request) => <span className="text-gray-500">#{request.order_id}</span> },
+    { 
+      header: "Type", 
+      render: (request) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          request.request_type === 'return' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
+        }`}>
+          {request.request_type === 'return' ? <FaUndo className="w-3 h-3 mr-1" /> : <FaExchangeAlt className="w-3 h-3 mr-1" />}
+          {request.request_type}
+        </span>
+      )
+    },
+    { 
+      header: "Date", 
+      render: (request) => new Date(request.created_at).toLocaleDateString('en-IN') 
+    },
+    { 
+      header: "Status", 
+      render: (request) => (
+        <div className={`inline-flex items-center px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(request.status)}`}>
+          {request.status}
+        </div>
+      )
+    },
+    { 
+      header: "Reason", 
+      render: (request) => <span className="text-gray-500 max-w-xs truncate" title={request.reason}>{request.reason}</span> 
+    },
+    { 
+      header: "Actions", 
+      render: (request) => (
+        <div className="flex gap-2">
+          {request.status === 'pending' && (
+            <>
+              <button
+                onClick={() => handleUpdateReturnExchange(request.id, 'approved', 'Approved by admin')}
+                className="text-green-600 hover:text-green-900 p-1"
+                title="Approve"
+              >
+                <FaCheck className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleUpdateReturnExchange(request.id, 'rejected', 'Rejected by admin')}
+                className="text-red-600 hover:text-red-900 p-1"
+                title="Reject"
+              >
+                <FaTimes className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      ) 
+    },
+  ];
 
   useEffect(() => {
     fetchData();
@@ -306,7 +422,7 @@ const ManageOrdersPage = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+        <div className="flex flex-wrap gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit max-w-full">
           <button
             onClick={() => setActiveTab('orders')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -368,166 +484,22 @@ const ManageOrdersPage = () => {
                 Showing {currentOrders.length} orders (Last updated: {new Date().toLocaleTimeString()})
               </p>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentOrders.length > 0 ? (
-                    currentOrders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          #{order.id}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{order.user_name || 'N/A'}</div>
-                            <div className="text-sm text-gray-500">{order.user_email || 'N/A'}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(order.created_at).toLocaleDateString('en-IN')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          ₹{order.total_amount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(order.order_status)}`}>
-                            {getStatusIcon(order.order_status)}
-                            {order.order_status}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {order.payment_method || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleViewOrder(order.id)}
-                              className="text-blue-600 hover:text-blue-900 p-1"
-                              title="View Details"
-                            >
-                              <FaEye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setModalType('status');
-                                setNewStatus(order.order_status);
-                                setShowModal(true);
-                              }}
-                              className="text-green-600 hover:text-green-900 p-1"
-                              title="Update Status"
-                            >
-                              <FaEdit className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                        <div className="text-4xl mb-4">📦</div>
-                        <p>No orders found</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <AdminTable 
+              columns={orderTableColumns} 
+              data={currentOrders} 
+              emptyMessage="No orders found" 
+            />
           </div>
         )}
 
         {/* Return/Exchange Requests Table */}
         {activeTab === 'returns' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentReturnExchange.length > 0 ? (
-                    currentReturnExchange.map((request) => (
-                      <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          #{request.id}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          #{request.order_id}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            request.request_type === 'return' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {request.request_type === 'return' ? <FaUndo className="w-3 h-3 mr-1" /> : <FaExchangeAlt className="w-3 h-3 mr-1" />}
-                            {request.request_type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(request.created_at).toLocaleDateString('en-IN')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`inline-flex items-center px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(request.status)}`}>
-                            {request.status}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                          {request.reason}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
-                            {request.status === 'pending' && (
-                              <>
-                                <button
-                                  onClick={() => handleUpdateReturnExchange(request.id, 'approved', 'Approved by admin')}
-                                  className="text-green-600 hover:text-green-900 p-1"
-                                  title="Approve"
-                                >
-                                  <FaCheck className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleUpdateReturnExchange(request.id, 'rejected', 'Rejected by admin')}
-                                  className="text-red-600 hover:text-red-900 p-1"
-                                  title="Reject"
-                                >
-                                  <FaTimes className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                        <div className="text-4xl mb-4">📋</div>
-                        <p>No return/exchange requests found</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <AdminTable 
+              columns={returnTableColumns} 
+              data={currentReturnExchange} 
+              emptyMessage="No return/exchange requests found" 
+            />
           </div>
         )}
 
@@ -574,8 +546,8 @@ const ManageOrdersPage = () => {
         {showModal && selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
+              <div className="p-3 md:p-6">
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
                   <h2 className="text-2xl font-semibold">
                     {modalType === 'view' ? 'Order Details' : 'Update Order Status'}
                   </h2>

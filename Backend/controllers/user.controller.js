@@ -1,10 +1,10 @@
 const { validationResult } = require("express-validator");
 const userService = require("../services/user.service");
-const blacklistTokenModel = require("../models/BlacklistToken.model");
-const db = require("../db/mysql12");
+const { User, BlacklistToken, Lead } = require("../models");
+const catchAsync = require("../utils/catchAsync");
+const ApiResponse = require("../utils/ApiResponse");
 
-module.exports.registerUser = async (req, res) => {
-  // console.log("Register request received with body:", req.body);
+module.exports.registerUser = catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array() });
@@ -12,355 +12,201 @@ module.exports.registerUser = async (req, res) => {
 
   const { name, username, gender, age, email, password } = req.body;
 
-  try {
-    const user = await userService.createUser({
-      name,
-      username,
-      gender,
-      age,
-      email,
-      password,
-    });
+  const user = await userService.createUser({
+    name,
+    username,
+    gender,
+    age,
+    email,
+    password,
+  });
 
-    const token = userService.generateAuthToken(user.insertId);
+  const token = userService.generateAuthToken(user);
+  return res.status(201).json(new ApiResponse(201, { token, userId: user.id }, "User registered successfully"));
+});
 
-    res.status(201).json({ token, userId: user.insertId });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-module.exports.loginUser = async (req, res) => {
+module.exports.loginUser = catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array() });
   }
 
   const { email, password } = req.body;
+  const user = await userService.findUserByEmail(email);
 
-  try {
-    const user = await userService.findUserByEmail(email);
-
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    if (user.is_blocked) {
-      return res
-        .status(403)
-        .json({
-          message: "Your account has been blocked. Please contact support.",
-        });
-    }
-    const isMatch = await userService.comparePassword(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-    const token = userService.generateAuthToken(user.id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 3600000,
-    });
-
-    delete user.password;
-    res.status(200).json({ token, user });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (!user) {
+    return res.status(401).json(new ApiResponse(401, null, "Invalid email or password"));
   }
-};
-module.exports.getUserProfile = async (req, res) => {
-  res.status(200).json(req.user);
-};
-module.exports.updateUserProfile = async (req, res) => {
+
+  if (user.is_blocked) {
+    return res.status(403).json(new ApiResponse(403, null, "Your account has been blocked. Please contact support."));
+  }
+
+  const isMatch = await userService.comparePassword(password, user.password);
+  if (!isMatch) {
+    return res.status(401).json(new ApiResponse(401, null, "Invalid email or password"));
+  }
+
+  const token = userService.generateAuthToken(user);
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: "Lax",
+    maxAge: 3600000,
+  });
+
+  const userData = user.toJSON();
+  delete userData.password;
+  return res.status(200).json(new ApiResponse(200, { token, user: userData }, "Login successful"));
+});
+
+module.exports.getUserProfile = catchAsync(async (req, res) => {
+  return res.status(200).json(new ApiResponse(200, req.user, "Profile fetched successfully"));
+});
+
+module.exports.updateUserProfile = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const { fullName, username, email, age, gender, password } = req.body;
 
-  try {
-    const updates = [];
-    const values = [];
-
-    if (fullName) {
-      updates.push("name = ?");
-      values.push(fullName);
-    }
-    if (username) {
-      updates.push("username = ?");
-      values.push(username);
-    }
-    if (email) {
-      updates.push("email = ?");
-      values.push(email);
-    }
-    if (age) {
-      updates.push("age = ?");
-      values.push(age);
-    }
-    if (gender) {
-      updates.push("gender = ?");
-      values.push(gender);
-    }
-    if (password) {
-      const bcrypt = require("bcrypt");
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updates.push("password = ?");
-      values.push(hashedPassword);
-    }
-
-    if (updates.length === 0) {
-      return res.status(400).json({ message: "No fields to update" });
-    }
-
-    values.push(userId);
-
-    const connection = await db.createConnection();
-    await connection.execute(
-      `UPDATE userinfo SET ${updates.join(", ")} WHERE id = ?`,
-      values
-    );
-    await connection.end();
-
-    res.status(200).json({ message: "Profile updated successfully" });
-  } catch (error) {
-    console.error("Update profile error:", error);
-    res.status(500).json({ message: "Server error" });
+  const updates = {};
+  if (fullName) updates.name = fullName;
+  if (username) updates.username = username;
+  if (email) updates.email = email;
+  if (age) updates.age = age;
+  if (gender) updates.gender = gender;
+  
+  if (password) {
+    const bcrypt = require("bcrypt");
+    updates.password = await bcrypt.hash(password, 10);
   }
-};
 
-module.exports.logoutUser = async (req, res) => {
-  try {
-    res.clearCookie("token");
-    
-    // Get token from cookies or authorization header
-    let token = req.cookies.token;
-    if (!token && req.headers.authorization) {
-      token = req.headers.authorization.split(" ")[1];
-    }
-    
-    // Only blacklist token if it exists
-    if (token) {
-      await blacklistTokenModel.create({ token });
-    }
-    
-    res.status(200).json({ message: "Logged Out" });
-  } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({ error: "Logout failed" });
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json(new ApiResponse(400, null, "No fields to update"));
   }
-};
 
-module.exports.getAllUsers = async (req, res) => {
-  try {
-    const connection = await db.createConnection();
-    const [results] = await connection.execute(
-      "SELECT id, name, email, is_blocked FROM userinfo"
-    );
-    await connection.end();
-    res.json(results);
-  } catch (err) {
-    console.error("❌ getAllUsers DB ERROR:", err); // 👈 log actual error
-    res.status(500).json({ error: err.message });
+  await User.update(updates, { where: { id: userId } });
+  return res.status(200).json(new ApiResponse(200, null, "Profile updated successfully"));
+});
+
+module.exports.logoutUser = catchAsync(async (req, res) => {
+  res.clearCookie("token");
+  
+  let token = req.cookies.token;
+  if (!token && req.headers.authorization) {
+    token = req.headers.authorization.split(" ")[1];
   }
-};
+  
+  if (token) {
+    await BlacklistToken.create({ token });
+  }
+  
+  return res.status(200).json(new ApiResponse(200, null, "Logged out successfully"));
+});
 
-module.exports.toggleBlockUser = async (req, res) => {
+module.exports.getAllUsers = catchAsync(async (req, res) => {
+  const users = await User.findAll({
+    attributes: ['id', 'name', 'email', 'is_blocked', 'role']
+  });
+  return res.status(200).json(new ApiResponse(200, users, "Users fetched successfully"));
+});
+
+module.exports.toggleBlockUser = catchAsync(async (req, res) => {
   const { id } = req.params;
-  try {
-    const connection = await db.createConnection();
-    await connection.execute(
-      "UPDATE userinfo SET is_blocked = NOT is_blocked WHERE id = ?",
-      [id]
-    );
-    await connection.end();
-    res.json({ message: "User block status updated." });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+  const user = await User.findByPk(id);
+  if (!user) return res.status(404).json(new ApiResponse(404, null, "User not found"));
 
-const nodemailer = require("nodemailer");
+  user.is_blocked = !user.is_blocked;
+  await user.save();
+  
+  return res.status(200).json(new ApiResponse(200, null, "User block status updated"));
+});
 
-module.exports.sendEmailToUser = async (req, res) => {
+module.exports.sendEmailToUser = catchAsync(async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).json({ message: "Email is required" });
+  if (!email) return res.status(400).json(new ApiResponse(400, null, "Email is required"));
 
-  // simulate response
   console.log(`Pretend email sent to ${email}`);
-  res.status(200).json({ message: `Discount email sent to ${email}` });
+  return res.status(200).json(new ApiResponse(200, null, `Discount email sent to ${email}`));
+});
 
-  // Future: implement nodemailer or another provider
-};
-
-
-
-
-module.exports.subscribeNewsletter = async (req, res) => {
+// Unified Leads (Newsletter)
+module.exports.subscribeNewsletter = catchAsync(async (req, res) => {
   const { name, email } = req.body;
   if (!email || !name) {
-    return res.status(400).json({ message: "All  fields are required" });
+    return res.status(400).json(new ApiResponse(400, null, "All fields are required"));
   }
 
-  try {
-    const connection = await db.createConnection();
-    const [existing] = await connection.execute(
-      "SELECT id FROM newsletter_subscriptions WHERE email = ?",
-      [email]
-    );
+  const [lead, created] = await Lead.findOrCreate({
+    where: { email, type: 'newsletter' },
+    defaults: { name, email, type: 'newsletter' }
+  });
 
-    if (existing.length > 0) {
-      await connection.end();
-      return res.status(409).json({ message: "Email already subscribed" });
-    }
-
-    await connection.execute(
-      "INSERT INTO newsletter_subscriptions (name, email) VALUES (?, ?)",
-      [name, email]
-    );
-    await connection.end();
-
-    res.status(201).json({ message: "Subscribed successfully" });
-  } catch (error) {
-    console.error("Newsletter subscription error:", error);
-    res.status(500).json({ message: "Server error" });
+  if (!created) {
+    return res.status(409).json(new ApiResponse(409, null, "Email already subscribed"));
   }
-};
 
-module.exports.unsubscribeNewsletter = async (req, res) => {
+  return res.status(201).json(new ApiResponse(201, null, "Subscribed successfully"));
+});
+
+module.exports.unsubscribeNewsletter = catchAsync(async (req, res) => {
   const { email } = req.body;
-
   if (!email) {
-    return res.status(400).json({ message: "Email is required" });
+    return res.status(400).json(new ApiResponse(400, null, "Email is required"));
   }
 
-  try {
-    const connection = await db.createConnection();
+  const deleted = await Lead.destroy({ where: { email, type: 'newsletter' } });
 
-    // Check if email exists
-    const [existing] = await connection.execute(
-      "SELECT id FROM newsletter_subscriptions WHERE email = ?",
-      [email]
-    );
-
-    if (existing.length === 0) {
-      await connection.end();
-      return res.status(404).json({ message: "Email not found in our list." });
-    }
-
-    // Delete the email from subscriptions
-    await connection.execute(
-      "DELETE FROM newsletter_subscriptions WHERE email = ?",
-      [email]
-    );
-
-    await connection.end();
-    return res.status(200).json({ message: "Unsubscribed successfully." });
-  } catch (error) {
-    console.error("Unsubscribe error:", error);
-    return res.status(500).json({ message: "Server error. Please try again." });
+  if (deleted === 0) {
+    return res.status(404).json(new ApiResponse(404, null, "Email not found in our list."));
   }
-};
-module.exports.Enquiry = async (req, res) => {
+
+  return res.status(200).json(new ApiResponse(200, null, "Unsubscribed successfully"));
+});
+
+// Unified Leads (Enquiry)
+module.exports.Enquiry = catchAsync(async (req, res) => {
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
-    return res.status(400).json({ message: "All fields are required" });
+    return res.status(400).json(new ApiResponse(400, null, "All fields are required"));
   }
 
-  try {
-    const connection = await db.createConnection();
-    await connection.execute(
-      "INSERT INTO enquiries (name, email, message) VALUES (?, ?, ?)",
-      [name, email, message]
-    );
-    await connection.end();
+  await Lead.create({ name, email, message, type: 'enquiry' });
+  return res.status(201).json(new ApiResponse(201, null, "Enquiry submitted successfully"));
+});
 
-    res.status(201).json({ message: "Enquiry submitted successfully" });
-  } catch (error) {
-    console.error("Enquiry submission error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+module.exports.getallEnquiry = catchAsync(async (req, res) => {
+  const enquiries = await Lead.findAll({ where: { type: 'enquiry' } });
+  return res.status(200).json(new ApiResponse(200, enquiries, "Enquiries fetched successfully"));
+});
 
-module.exports.getallEnquiry = async (req, res) => {
-  try {
-    const connection = await db.createConnection();
-    const [rows] = await connection.execute("SELECT * FROM enquiries");
-    await connection.end();
-
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error("Error fetching enquiries:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-module.exports.deleteEnquiry = async (req, res) => {
+module.exports.deleteEnquiry = catchAsync(async (req, res) => {
   const { id } = req.params;
+  if (!id) return res.status(400).json(new ApiResponse(400, null, "ID is required"));
 
-  if (!id) {
-    return res.status(400).json({ message: "ID is required" });
+  const deleted = await Lead.destroy({ where: { id, type: 'enquiry' } });
+
+  if (deleted === 0) {
+    return res.status(404).json(new ApiResponse(404, null, "Enquiry not found"));
   }
 
-  try {
-    const connection = await db.createConnection();
-    const [result] = await connection.execute(
-      "DELETE FROM enquiries WHERE id = ?",
-      [id]
-    );
+  return res.status(200).json(new ApiResponse(200, null, "Enquiry deleted successfully"));
+});
 
-    if (result.affectedRows === 0) {
-      await connection.end();
-      return res.status(404).json({ message: "Enquiry not found" });
-    }
+module.exports.getallNewsletter = catchAsync(async (req, res) => {
+  const newsletters = await Lead.findAll({ where: { type: 'newsletter' } });
+  return res.status(200).json(new ApiResponse(200, newsletters, "Newsletters fetched successfully"));
+});
 
-    await connection.end();
-    res.status(200).json({ message: "Enquiry deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting enquiry:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-module.exports.getallNewsletter = async (req, res) => {
-  try {
-    const connection = await db.createConnection();
-    const [rows] = await connection.execute(
-      "SELECT * FROM newsletter_subscriptions"
-    );
-    await connection.end();
-
-    res.status(200).json(rows);
-  } catch (error) {
-    console.error("Error fetching newsletters:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-module.exports.deleteNewsletter = async (req, res) => {
+module.exports.deleteNewsletter = catchAsync(async (req, res) => {
   const { id } = req.params;
+  if (!id) return res.status(400).json(new ApiResponse(400, null, "ID is required"));
 
-  if (!id) {
-    return res.status(400).json({ message: "ID is required" });
+  const deleted = await Lead.destroy({ where: { id, type: 'newsletter' } });
+
+  if (deleted === 0) {
+    return res.status(404).json(new ApiResponse(404, null, "Newsletter subscription not found"));
   }
 
-  try {
-    const connection = await db.createConnection();
-    const [result] = await connection.execute(
-      "DELETE FROM newsletter_subscriptions WHERE id = ?",
-      [id]
-    );
-
-    if (result.affectedRows === 0) {
-      await connection.end();
-      return res
-        .status(404)
-        .json({ message: "Newsletter subscription not found" });
-    }
-
-    await connection.end();
-    res
-      .status(200)
-      .json({ message: "Newsletter subscription deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting newsletter subscription:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+  return res.status(200).json(new ApiResponse(200, null, "Newsletter subscription deleted successfully"));
+});

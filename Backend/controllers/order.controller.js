@@ -48,7 +48,7 @@ const OrderController = {
 
       res.status(200).json({
         success: true,
-        data: orders
+        data: orders.rows || orders
       });
     } catch (err) {
       console.error("Error fetching orders:", err);
@@ -78,7 +78,7 @@ const OrderController = {
 
       res.status(200).json({
         success: true,
-        data: orders
+        data: orders.rows || orders
       });
     } catch (err) {
       console.error("Error fetching user orders:", err);
@@ -228,7 +228,7 @@ const OrderController = {
       const userId = req.query.userId || null;
       const status = req.query.status || null;
 
-      const requests = await OrderService.getReturnExchangeRequests(userId, status);
+      const requests = await OrderService.getReturnExchangeRequests({ userId, status });
 
       res.status(200).json({
         success: true,

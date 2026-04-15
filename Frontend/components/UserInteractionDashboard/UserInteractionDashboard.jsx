@@ -98,7 +98,7 @@ const UserInteractionDashboard = () => {
                 {interaction.main_image && (
                   <div className="w-full h-32 bg-gray-100 rounded overflow-hidden mb-3">
                     <img
-                      src={`http://localhost:4001/upload${interaction.main_image.startsWith('/') ? '' : '/'}${interaction.main_image}`}
+                      src={getImageUrl(interaction.main_image)}
                       alt={interaction.product_name}
                       className="w-full h-full object-cover"
                     />
@@ -163,7 +163,7 @@ const UserInteractionDashboard = () => {
                 {product.main_image && (
                   <div className="w-full h-32 bg-gray-100 rounded overflow-hidden mb-3">
                     <img
-                      src={`http://localhost:4001/upload${product.main_image.startsWith('/') ? '' : '/'}${product.main_image}`}
+                      src={getImageUrl(product.main_image)}
                       alt={product.product_name}
                       className="w-full h-full object-cover"
                     />

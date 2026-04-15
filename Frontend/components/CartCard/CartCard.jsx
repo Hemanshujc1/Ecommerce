@@ -8,6 +8,7 @@ import {
   addToWishlist,
 } from "../../lib/api";
 import { getUserId, isAuthenticated } from "../../lib/auth";
+import { getImageUrl } from "../../lib/image.helper";
 import toast from "react-hot-toast";
 
 const CartCard = ({ onCartUpdate }) => {
@@ -27,8 +28,8 @@ const CartCard = ({ onCartUpdate }) => {
     try {
       const userId = getUserId();
       const response = await getUserCart(userId);
-      if (response && response.success) {
-        setCartItems(response.cart || []);
+      if (response && response.statusCode === 200) {
+        setCartItems(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
       console.error("Error loading cart:", error);
@@ -133,9 +134,7 @@ const CartCard = ({ onCartUpdate }) => {
       ) : (
         <div className="space-y-4">
           {cartItems.map((item) => {
-            const imageUrl = item.main_image 
-              ? `http://localhost:4001/upload${item.main_image.startsWith('/') ? '' : '/'}${item.main_image}`
-              : '/placeholder-image.jpg';
+            const imageUrl = getImageUrl(item.main_image);
 
             return (
               <div

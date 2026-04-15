@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { fetchAllProducts, deleteProduct } from "../../../lib/api";
+import { fetchAllProducts, deleteProduct } from "@/lib/api";
 import EditProductModal from "../../../components/EditProductModal/EditProductModal";
+import AdminTable from "@/components/AdminTable/AdminTable";
 
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
@@ -21,6 +22,55 @@ const ManageProducts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
 
+  const productTableColumns = [
+    {
+      header: "Product",
+      render: (product) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">
+            {product.product_name}
+          </div>
+          <div className="text-sm text-gray-500">
+            {product.short_description?.substring(0, 50)}...
+          </div>
+        </div>
+      ),
+    },
+    { header: "Brand", accessor: "brand" },
+    {
+      header: "Category",
+      render: (product) => (
+        <div>
+          <div className="text-sm text-gray-900">{product.category}</div>
+          <div className="text-sm text-gray-500">{product.main_category}</div>
+        </div>
+      ),
+    },
+    {
+      header: "Created",
+      render: (product) => new Date(product.created_at).toLocaleDateString(),
+    },
+    {
+      header: "Actions",
+      render: (product) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleEdit(product)}
+            className="text-indigo-600 hover:text-indigo-900 px-3 py-1 rounded hover:bg-indigo-50"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(product.id)}
+            className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50"
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   useEffect(() => {
     loadProducts();
   }, []);
@@ -33,8 +83,8 @@ const ManageProducts = () => {
     try {
       setLoading(true);
       const response = await fetchAllProducts();
-      if (response && response.success) {
-        setProducts(response.products);
+      if (response && (response.success || response.data)) {
+        setProducts(response.data || []);
       }
     } catch (error) {
       console.error("Error loading products:", error);
@@ -135,7 +185,7 @@ const ManageProducts = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -144,9 +194,9 @@ const ManageProducts = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Products</h1>
+    <div className="p-3 md:p-6">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
+        <h1 className="text-lg md:text-2xl font-bold">Manage Products</h1>
         <div className="text-sm text-gray-600">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
         </div>
@@ -245,69 +295,11 @@ const ManageProducts = () => {
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto bg-white rounded-lg shadow">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Brand
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {product.product_name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {product.short_description?.substring(0, 50)}...
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.brand}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{product.category}</div>
-                      <div className="text-sm text-gray-500">{product.main_category}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(product.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4 px-3 py-1 rounded hover:bg-indigo-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable 
+            columns={productTableColumns} 
+            data={currentProducts} 
+            emptyMessage={products.length > 0 ? "No products match your filters" : "No products found"}
+          />
 
           {/* Pagination */}
           {totalPages > 1 && (

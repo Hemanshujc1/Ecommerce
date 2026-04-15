@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-
-// API functions
+import { API_BASE_URL } from "@/lib/api.config";
 import {
   fetchProductById,
   addToCart,
@@ -137,7 +136,7 @@ const ProductDisplayPage = () => {
   useEffect(() => {
     const fetchRelatedSections = async () => {
       try {
-        const res = await fetch("http://localhost:4001/home-products");
+        const res = await fetch(`${API_BASE_URL}/home-products`);
         const data = await res.json();
 
         const transformed = (data.sections || []).map((section) => ({
@@ -164,10 +163,7 @@ const ProductDisplayPage = () => {
 
   // Utilities to process image URLs
   const getImageUrl = (path) => {
-    if (!path) return "/images/product-placeholder.jpg";
-    return path.startsWith("http")
-      ? path
-      : `http://localhost:4001/upload${path}`;
+    return resolveImageUrl(path);
   };
 
   const getRelatedImages = (variant) => {
@@ -405,7 +401,7 @@ const ProductDisplayPage = () => {
                     ?.videos.map((videoPath, index) => {
                       const videoUrl = videoPath.startsWith("http")
                         ? videoPath
-                        : `http://localhost:4001/upload${videoPath}`;
+                        : getImageUrl(videoPath);
                       return (
                         <div
                           key={index}
@@ -839,7 +835,7 @@ const ProductDisplayPage = () => {
                         {imageArray.map((imagePath, imgIndex) => {
                           const imageUrl = imagePath.startsWith("http")
                             ? imagePath
-                            : `http://localhost:4001/upload${imagePath}`;
+                            : getImageUrl(imagePath);
                           return (
                             <div
                               key={imgIndex}

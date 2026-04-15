@@ -1,5 +1,5 @@
 // lib/api.js
-const API_BASE_URL = "http://localhost:4001";
+import { API_BASE_URL } from "./api.config";
 
 export const fetchSocialLinks = async () => {
     try {
@@ -72,31 +72,19 @@ export const deleteProduct = async (id) => {
   }
 };
   
-// lib/api.js
+// Wishlist & Cart
 export const addToWishlist = async (userId, productId) => {
   try {
-    console.log('API: Adding to wishlist with data:', { userId, productId });
-    
-    const response = await fetch("http://localhost:4001/products/wishlist/add", {
+    const response = await fetch(`${API_BASE_URL}/products/wishlist/add`, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, productId }),
     });
     
-    console.log('API: Wishlist response status:', response.status);
-    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API: Wishlist error response:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      throw new Error(`Wishlist add failed: ${response.status}`);
     }
-    
-    const result = await response.json();
-    console.log('API: Wishlist success response:', result);
-    return result;
+    return await response.json();
   } catch (error) {
     console.error("Error in addToWishlist:", error);
     return { success: false, error: error.message };
@@ -104,7 +92,7 @@ export const addToWishlist = async (userId, productId) => {
 };
 
 export const removeFromWishlist = async (userId, productId) => {
-  return await fetch("http://localhost:4001/products/wishlist/remove", {
+  return await fetch(`${API_BASE_URL}/products/wishlist/remove`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, productId }),
@@ -113,28 +101,16 @@ export const removeFromWishlist = async (userId, productId) => {
 
 export const addToCart = async (userId, productId, quantity) => {
   try {
-    console.log('API: Adding to cart with data:', { userId, productId, quantity });
-    
-    const response = await fetch("http://localhost:4001/products/cart/add", {
+    const response = await fetch(`${API_BASE_URL}/products/cart/add`, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, productId, quantity }),
     });
     
-    console.log('API: Cart response status:', response.status);
-    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API: Cart error response:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      throw new Error(`Cart add failed: ${response.status}`);
     }
-    
-    const result = await response.json();
-    console.log('API: Cart success response:', result);
-    return result;
+    return await response.json();
   } catch (error) {
     console.error("Error in addToCart:", error);
     return { success: false, error: error.message };
@@ -142,41 +118,32 @@ export const addToCart = async (userId, productId, quantity) => {
 };
 
 export const removeFromCart = async (userId, productId) => {
-  return await fetch("http://localhost:4001/products/cart/remove", {
+  return await fetch(`${API_BASE_URL}/products/cart/remove`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, productId }),
   }).then((res) => res.json());
 };
 
-// Get user's cart items
 export const getUserCart = async (userId) => {
-  return await fetch(`http://localhost:4001/products/cart/${userId}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/products/cart/${userId}`).then((res) => res.json());
 };
 
-// Get user's wishlist items
 export const getUserWishlist = async (userId) => {
-  return await fetch(`http://localhost:4001/products/wishlist/${userId}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/products/wishlist/${userId}`).then((res) => res.json());
 };
 
-// Update cart quantity with stock validation
 export const updateCartQuantity = async (userId, productId, quantity) => {
-  return await fetch("http://localhost:4001/products/cart/update", {
+  return await fetch(`${API_BASE_URL}/products/cart/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, productId, quantity }),
   }).then((res) => res.json());
 };
 
-// User Interaction API functions
+// Interactions
 export const trackUserInteraction = async (userId, productId, isWishlisted = false, isInCart = false) => {
-  return await fetch("http://localhost:4001/interactions/track", {
+  return await fetch(`${API_BASE_URL}/interactions/track`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, productId, isWishlisted, isInCart }),
@@ -184,7 +151,7 @@ export const trackUserInteraction = async (userId, productId, isWishlisted = fal
 };
 
 export const updateWishlistInteraction = async (userId, productId, isWishlisted) => {
-  return await fetch("http://localhost:4001/interactions/wishlist/update", {
+  return await fetch(`${API_BASE_URL}/interactions/wishlist/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, productId, isWishlisted }),
@@ -192,7 +159,7 @@ export const updateWishlistInteraction = async (userId, productId, isWishlisted)
 };
 
 export const updateCartInteraction = async (userId, productId, isInCart) => {
-  return await fetch("http://localhost:4001/interactions/cart/update", {
+  return await fetch(`${API_BASE_URL}/interactions/cart/update`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, productId, isInCart }),
@@ -200,43 +167,16 @@ export const updateCartInteraction = async (userId, productId, isInCart) => {
 };
 
 export const getUserInteractions = async (userId) => {
-  return await fetch(`http://localhost:4001/interactions/user/${userId}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
-};
-
-export const getProductStats = async (productId) => {
-  return await fetch(`http://localhost:4001/interactions/product/${productId}/stats`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/interactions/user/${userId}`).then((res) => res.json());
 };
 
 export const getPopularProducts = async (limit = 10) => {
-  return await fetch(`http://localhost:4001/interactions/popular?limit=${limit}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/interactions/popular?limit=${limit}`).then((res) => res.json());
 };
 
-export const getUserWishlistWithInteractions = async (userId) => {
-  return await fetch(`http://localhost:4001/interactions/user/${userId}/wishlist`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
-};
-
-export const getUserCartWithInteractions = async (userId) => {
-  return await fetch(`http://localhost:4001/interactions/user/${userId}/cart`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
-};
-
-// Order Management API functions
+// Orders
 export const createOrder = async (orderData) => {
-  return await fetch("http://localhost:4001/orders/create", {
+  return await fetch(`${API_BASE_URL}/orders/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderData),
@@ -248,16 +188,8 @@ export const getAllOrders = async (limit = 50, offset = 0, status = null) => {
   if (limit) params.append('limit', limit);
   if (offset) params.append('offset', offset);
   if (status) params.append('status', status);
-  // Add cache-busting parameter
-  params.append('_t', Date.now().toString());
   
-  return await fetch(`http://localhost:4001/orders/all?${params}`, {
-    method: "GET",
-    headers: { 
-      "Content-Type": "application/json",
-      "Cache-Control": "no-cache"
-    },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/orders/all?${params.toString()}`).then((res) => res.json());
 };
 
 export const getUserOrders = async (userId, limit = 20, offset = 0) => {
@@ -265,21 +197,15 @@ export const getUserOrders = async (userId, limit = 20, offset = 0) => {
   if (limit) params.append('limit', limit);
   if (offset) params.append('offset', offset);
   
-  return await fetch(`http://localhost:4001/orders/user/${userId}?${params}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/orders/user/${userId}?${params.toString()}`).then((res) => res.json());
 };
 
 export const getOrderById = async (orderId) => {
-  return await fetch(`http://localhost:4001/orders/${orderId}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/orders/${orderId}`).then((res) => res.json());
 };
 
 export const updateOrderStatus = async (orderId, status, comment = '', changedBy = null) => {
-  return await fetch(`http://localhost:4001/orders/${orderId}/status`, {
+  return await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status, comment, changedBy }),
@@ -287,7 +213,7 @@ export const updateOrderStatus = async (orderId, status, comment = '', changedBy
 };
 
 export const cancelOrder = async (orderId, reason = '', userId = null) => {
-  return await fetch(`http://localhost:4001/orders/${orderId}/cancel`, {
+  return await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reason, userId }),
@@ -295,7 +221,7 @@ export const cancelOrder = async (orderId, reason = '', userId = null) => {
 };
 
 export const createReturnExchangeRequest = async (requestData) => {
-  return await fetch("http://localhost:4001/orders/return-exchange", {
+  return await fetch(`${API_BASE_URL}/orders/return-exchange`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(requestData),
@@ -306,20 +232,12 @@ export const getReturnExchangeRequests = async (userId = null, status = null) =>
   const params = new URLSearchParams();
   if (userId) params.append('userId', userId);
   if (status) params.append('status', status);
-  // Add cache-busting parameter
-  params.append('_t', Date.now().toString());
   
-  return await fetch(`http://localhost:4001/orders/return-exchange?${params}`, {
-    method: "GET",
-    headers: { 
-      "Content-Type": "application/json",
-      "Cache-Control": "no-cache"
-    },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/orders/return-exchange?${params.toString()}`).then((res) => res.json());
 };
 
 export const updateReturnExchangeStatus = async (requestId, status, adminComment = '', processedBy = null, refundAmount = null) => {
-  return await fetch(`http://localhost:4001/orders/return-exchange/${requestId}`, {
+  return await fetch(`${API_BASE_URL}/orders/return-exchange/${requestId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status, adminComment, processedBy, refundAmount }),
@@ -327,8 +245,5 @@ export const updateReturnExchangeStatus = async (requestId, status, adminComment
 };
 
 export const getOrderStats = async () => {
-  return await fetch("http://localhost:4001/orders/stats/overview", {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  }).then((res) => res.json());
+  return await fetch(`${API_BASE_URL}/orders/stats/overview`).then((res) => res.json());
 };

@@ -1,6 +1,6 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "@/lib/api.config";
 
 const initialLinks = {
   instagram: "",
@@ -18,7 +18,7 @@ const Page = () => {
   useEffect(() => {
     const fetchLinks = async () => {
       try {
-        const res = await fetch("http://localhost:4001/social-links");
+        const res = await fetch(`${API_BASE_URL}/social-links`);
         const data = await res.json();
         setSocialLinks(data);
       } catch (err) {
@@ -38,7 +38,7 @@ const Page = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:4001/social-links", {
+      const res = await fetch(`${API_BASE_URL}/social-links`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(socialLinks),
@@ -58,8 +58,8 @@ const Page = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">Manage Social Links</h1>
+    <div className="p-3 md:p-6 w-full max-w-3xl">
+      <h1 className="text-lg md:text-2xl font-bold mb-6">Manage Social Links</h1>
 
       <form
         onSubmit={handleSubmit}

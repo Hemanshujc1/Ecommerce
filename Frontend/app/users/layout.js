@@ -17,18 +17,14 @@ export const metadata = {
   description: "Ecommerce User Panel",
 };
 
-export default function RootLayout({ children }) {
+export default function UserLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`min-h-[100vh] ${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-       < UserNavbar/>
-       <div className="min-h-screen">
+    <>
+      <UserNavbar />
+      <div className="min-h-screen">
         {children}
-        </div>
-        <UserFooter/>
-      </body>
-    </html>
+      </div>
+      <UserFooter />
+    </>
   );
 }

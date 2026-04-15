@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import LandingPage from "@/components/LandingPage/LandingPage";
 import ServiceCard from "@/components/ServiceCard/ServiceCard";
 import { LuNotebookPen, LuShoppingBag, LuGift } from "react-icons/lu";
+import { API_BASE_URL } from "@/lib/api.config";
 import { CiDeliveryTruck } from "react-icons/ci";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import BlogPost from "@/components/BlogPost/BlogPost";
@@ -21,7 +22,7 @@ const Page = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch("http://localhost:4001/home-products");
+        const res = await fetch(`${API_BASE_URL}/home-products`);
         const data = await res.json();
 
         // Handle different response formats
@@ -108,7 +109,7 @@ const Page = () => {
             
             {/* Add promotional banner after the first section */}
             {idx === 0 && (
-              <section className="bg-[whitesmoke] text-black w-[90vw] mx-auto rounded-xl overflow-hidden shadow-md flex flex-col md:flex-row h-auto md:h-[70vh] my-12">
+              <section className="bg-[whitesmoke] text-black w-full max-w-6xl mx-auto px-4 rounded-xl overflow-hidden shadow-md flex flex-col md:flex-row h-auto md:h-[70vh] my-12">
                 {/* Image */}
                 <div className="relative w-full md:w-1/2 h-[300px] md:h-full">
                   <Image
@@ -160,18 +161,15 @@ const Page = () => {
       <BlogPost />
 
       {/* Brand Logos */}
-      <div className="brands flex gap-10 justify-center w-screen h-auto px-6 py-10">
+      <div className="brands flex flex-wrap gap-4 justify-center w-full px-6 py-10">
         {[1, 2, 3, 4, 5].map((n) => (
-          <div
-            key={n}
-            className="relative w-[20%] h-full rounded-md overflow-hidden"
-          >
+          <div key={n} className="relative w-1/3 sm:w-1/4 md:w-1/5 lg:w-[15%] h-20 rounded-md overflow-hidden">
             <Image
               src={`/images/logo${n}.png`}
               alt={`brand logo ${n}`}
               width={300}
               height={200}
-              className="object-contain rounded-md"
+              className="object-contain rounded-md w-full h-full"
             />
           </div>
         ))}

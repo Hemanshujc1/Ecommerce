@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { API_BASE_URL } from "@/lib/api.config";
 
 const page = () => {
   const [name, setName] = useState("");
@@ -20,7 +21,7 @@ const page = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:4001/users/Enquiry", {
+      const res = await fetch(`${API_BASE_URL}/users/Enquiry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -44,10 +45,9 @@ const page = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50 flex flex-col gap-10">
-      <h1 className="text-4xl font-bold text-center">Contact Us</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto">
+    <div className="min-h-screen p-4 sm:p-6 bg-gray-50 flex flex-col gap-8">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center">Contact Us</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto w-full">
         {/* Left: Address & Map */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded shadow">

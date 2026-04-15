@@ -16,6 +16,7 @@ import {
   updateCartInteraction,
 } from "../../lib/api";
 import { getUserId, isAuthenticated } from "../../lib/auth";
+import { getImageUrl } from "../../lib/image.helper";
 import toast from "react-hot-toast";
 
 const VISIBLE_CARDS = 4;
@@ -156,89 +157,56 @@ const ProductCard = ({ title, items }) => {
       : visibleItems;
 
   return (
-    <div className="px-10 relative">
-      {/* text */}
-      <div className="flex justify-between text-black mb-6">
-        <div className="text-xl font-bold">{title}</div>
+    <div className="px-4 sm:px-6 lg:px-10 relative">
+      {/* Header */}
+      <div className="flex justify-between items-center text-black mb-6">
+        <div className="text-lg sm:text-xl font-bold">{title}</div>
         <Link href="/users/Products">
-          <button className="text-sm underline font-semibold hover:scale-110">
-            VIEW ALL PRODUCTS
-          </button>
+          <button className="text-sm underline font-semibold hover:scale-110">VIEW ALL</button>
         </Link>
       </div>
 
       {/* Carousel */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 transition-all duration-500">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 transition-all duration-500">
         {slidesToShow.map((item, index) => {
           const productId = item.id || item._id;
           const quantity = cartQuantities[productId] || 0;
           const inWishlist = wishlist[productId] || false;
 
           return (
-            <div
-              key={index}
-              className="flex flex-col items-start gap-4 h-[60vh] relative"
-            >
-              <div className="relative w-full h-[70%] rounded-md hover:scale-95 transition-transform">
+            <div key={index} className="flex flex-col items-start gap-3 relative bg-white rounded-lg shadow-sm p-2">
+              <div className="relative w-full aspect-square rounded-md hover:scale-95 transition-transform overflow-hidden">
                 {item?.img && (
                   <img
-                    src={`http://localhost:4001/upload/${
-                      item.img.startsWith("/") ? "" : "/"
-                    }${item.img}`}
+                    src={getImageUrl(item.img)}
                     alt={item.productname}
                     className="object-contain rounded-md w-full h-full"
                   />
                 )}
               </div>
-              
+
               <div className="text-black text-left flex flex-col gap-1 w-full">
-                <h3 className="text-lg font-semibold uppercase">
-                  {item.productname}
-                </h3>
+                <h3 className="text-sm sm:text-base font-semibold uppercase line-clamp-2">{item.productname}</h3>
                 <p className="text-sm">{item.price}</p>
-                
-                {/* Cart Controls */}
+
                 {quantity > 0 ? (
                   <div className="flex items-center gap-2 mt-2">
-                    <button
-                      onClick={() => handleRemoveFromCart(productId)}
-                      className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-black font-bold"
-                    >
-                      -
-                    </button>
+                    <button onClick={() => handleRemoveFromCart(productId)} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-black font-bold">-</button>
                     <span className="font-semibold">{quantity}</span>
-                    <button
-                      onClick={() => handleIncreaseQuantity(productId)}
-                      className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-black font-bold"
-                    >
-                      +
-                    </button>
+                    <button onClick={() => handleIncreaseQuantity(productId)} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-black font-bold">+</button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => handleAddToCart(productId)}
-                    className="mt-2 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition uppercase text-sm tracking-wide w-full"
-                  >
-                    <FiShoppingCart className="inline mr-2" />
+                  <button onClick={() => handleAddToCart(productId)} className="mt-2 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition uppercase text-xs sm:text-sm tracking-wide w-full">
                     Add to Cart
                   </button>
                 )}
               </div>
-              
-              {/* Wishlist Button */}
-              <button 
+
+              <button
                 onClick={() => toggleWishlist(productId)}
-                className={`absolute top-3 right-3 p-2 rounded-full transition ${
-                  inWishlist 
-                    ? 'bg-red-500 text-white hover:bg-red-600' 
-                    : 'bg-white/80 text-black hover:bg-gray-200'
-                }`}
+                className={`absolute top-3 right-3 p-2 rounded-full transition ${inWishlist ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/80 text-black hover:bg-gray-200'}`}
               >
-                {inWishlist ? (
-                  <FaHeart className="text-xl" />
-                ) : (
-                  <FiHeart className="text-xl" />
-                )}
+                {inWishlist ? <FaHeart className="text-lg" /> : <FiHeart className="text-lg" />}
               </button>
             </div>
           );

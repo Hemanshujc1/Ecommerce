@@ -1,5 +1,5 @@
 // Additional API functions for the admin dashboard
-const API_BASE_URL = "http://localhost:4001";
+import { API_BASE_URL } from "./api.config";
 
 // Get dashboard analytics data
 export const getDashboardAnalytics = async (timeRange = '7d') => {

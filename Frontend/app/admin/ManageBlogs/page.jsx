@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import AdminSearchFilter from "@/components/AdminSearchFilter/AdminSearchFilter";
 import AdminPagination from "@/components/AdminPagination/AdminPagination";
-
+import { API_BASE_URL } from "@/lib/api.config";
 const page = () => {
   const [blogs, setBlogs] = useState([]);
   const [filteredBlogs, setFilteredBlogs] = useState([]);
@@ -39,7 +39,7 @@ const page = () => {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:4001/blogs");
+      const res = await fetch(`${API_BASE_URL}/blogs`);
       const data = await res.json();
       setBlogs(data);
     } catch (error) {
@@ -125,8 +125,8 @@ const page = () => {
     if (formData.image) form.append("image", formData.image);
 
     const url = editingId
-      ? `http://localhost:4001/blogs/${editingId}`
-      : "http://localhost:4001/blogs";
+      ? `${API_BASE_URL}/blogs/${editingId}`
+      : `${API_BASE_URL}/blogs`;
 
     try {
       const res = await fetch(url, {
@@ -152,7 +152,7 @@ const page = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
-    const res = await fetch(`http://localhost:4001/blogs/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/blogs/${id}`, {
       method: "DELETE",
     });
     if (res.ok) {
@@ -175,7 +175,7 @@ const page = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -184,9 +184,9 @@ const page = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Blogs</h1>
+    <div className="p-3 md:p-6">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
+        <h1 className="text-lg md:text-2xl font-bold">Manage Blogs</h1>
         <div className="text-sm text-gray-600">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredBlogs.length)} of {filteredBlogs.length} blogs
         </div>

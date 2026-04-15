@@ -7,6 +7,7 @@ import CartCard from "@/components/CartCard/CartCard";
 import CartTotal from "@/components/CartTotal/CartTotal";
 import { getUserCart } from "@/lib/api";
 import { getUserId, isAuthenticated } from "@/lib/auth";
+import { API_BASE_URL } from "@/lib/api.config";
 
 const Page = () => {
   const [productSections, setProductSections] = useState([]);
@@ -16,7 +17,7 @@ const Page = () => {
   useEffect(() => {
     const fetchProductSections = async () => {
       try {
-        const res = await fetch("http://localhost:4001/home-products");
+        const res = await fetch(`${API_BASE_URL}/home-products`);
         const data = await res.json();
 
         const transformed = (data.sections || []).map((section) => ({
@@ -59,7 +60,7 @@ const Page = () => {
 
   return (
     <div className="flex flex-col gap-12 bg-gray-50 text-black min-h-screen">
-      <h1 className="text-4xl font-bold text-center uppercase tracking-widest py-16 bg-white">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center uppercase tracking-widest py-10 sm:py-16 bg-white">
         Your Cart
       </h1>
 

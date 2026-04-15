@@ -1,11 +1,16 @@
 const http = require("http");
 const app = require("./app");
-const port = process.env.PORT || 4000
+const port = process.env.PORT || 4000;
 const server = http.createServer(app);
-const userModel = require("./models/user.model");
-const userAdmin = require("./models/admin.model");
 
+const { sequelize } = require("./models");
 
-server.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+// Sync the database (creates tables if they don't exist based on models)
+sequelize.sync({ alter: true }).then(() => {
+  console.log("Database & tables synced");
+  server.listen(port, () => {
+    console.log(`Example app listening on port ${port}`);
+  });
+}).catch(err => {
+  console.error("Unable to sync database:", err);
 });

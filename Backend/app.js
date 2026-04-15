@@ -1,15 +1,19 @@
-// const userAdmin = require("./models/admin.model");
-// const userModel = require("./models/user.model");
-// const connectToDB = require("./db/db");
-
 const dotenv = require("dotenv");
 dotenv.config();
+
 const express = require("express");
 const app = express();
-
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
+const { SiteConfiguration } = require("./models");
+const globalErrorHandler = require("./middlewares/error.middleware");
+const catchAsync = require("./utils/catchAsync");
+const ApiResponse = require("./utils/ApiResponse");
+
+// Routes
 const userRoutes = require("./routes/user.routes");
 const adminRoutes = require("./routes/admin.routes");
 const landingRoutes = require("./routes/landing.routes.js");
@@ -19,77 +23,81 @@ const productsRoutes = require("./routes/products.routes");
 const userInteractionRoutes = require("./routes/userInteraction.routes");
 const orderRoutes = require("./routes/order.routes");
 
+// 1. GLOBAL MIDDLEWARES
 
+// Security Headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// CORS
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
-app.use(express.json());
-app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
 
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 1000, // limit each IP to 1000 requests per windowMs
+    message: "Too many requests from this IP, please try again after 15 minutes"
+});
+app.use("/users", limiter);
+app.use("/admins", limiter);
+
+// Body Parser
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+
+// 2. STATIC FILES
+app.use("/upload/collection", express.static("public/upload/collection"));
+app.use("/upload", express.static("public/upload"));
+app.use("/products", express.static("public/products"));
+app.use("/blogs", express.static("public/upload")); // Adjust if blogs are elsewhere
+
+// 3. ROUTES
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("API is running...");
 });
 
 app.use("/users", userRoutes);
 app.use("/admins", adminRoutes);
 
-const db = require("./db/mysql12"); 
-
-app.get("/social-links", async (req, res) => {
-  try {
-    const connection = await db.createConnection();
-    const [rows] = await connection.execute("SELECT instagram, twitter, facebook, linkedin, whatsapp, youtube FROM social_links WHERE id = 1");
-    await connection.end();
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Social links not found" });
-    }
-    res.json(rows[0]);
-  } catch (error) {
-    console.error("GET error:", error);
-    res.status(500).json({ error: "Database error" });
+// Social Links (Refactored to use catchAsync and ApiResponse)
+app.get("/social-links", catchAsync(async (req, res) => {
+  const config = await SiteConfiguration.findOne({ where: { key: 'social_links' } });
+  if (!config) {
+    return res.json(new ApiResponse(200, { instagram: "", twitter: "", facebook: "", linkedin: "", youtube: "", whatsapp: "" }));
   }
-});
+  res.json(new ApiResponse(200, config.value));
+}));
 
-app.put("/social-links", async (req, res) => {
+app.put("/social-links", catchAsync(async (req, res) => {
   const { instagram, twitter, facebook, linkedin, youtube, whatsapp } = req.body;
-  try {
-    const connection = await db.createConnection();
-    const [result] = await connection.execute(
-      `UPDATE social_links SET 
-        instagram = ?, 
-        twitter = ?, 
-        facebook = ?, 
-        linkedin = ?, 
-        youtube = ?, 
-        whatsapp = ?,
-        updated_at = NOW()
-       WHERE id = 1`,
-      [instagram, twitter, facebook, linkedin, youtube, whatsapp]
-    );
-    await connection.end();
-    res.status(200).json({ message: "Social links updated successfully" });
-  } catch (error) {
-    console.error("PUT error:", error);
-    res.status(500).json({ error: "Database error" });
+  const [config, created] = await SiteConfiguration.findOrCreate({
+    where: { key: 'social_links' },
+    defaults: { 
+      value: { instagram, twitter, facebook, linkedin, youtube, whatsapp } 
+    }
+  });
+
+  if (!created) {
+    await config.update({ 
+      value: { instagram, twitter, facebook, linkedin, youtube, whatsapp } 
+    });
   }
-});
 
-app.use("/upload/collection", express.static("public/upload/collection"));
-app.use("/upload", landingRoutes); 
-app.use("/", landingRoutes); 
+  res.status(200).json(new ApiResponse(200, null, "Social links updated successfully"));
+}));
+
 app.use("/home-products", homeProductsRoutes);
-
-// Serve product images from the old location for backward compatibility
-app.use("/products", express.static("public/products"));
-
+app.use("/products", productsRoutes);
 app.use("/blogs", blogRoutes);
-app.use("/upload", express.static("public/upload"));
-
-
-app.use("/products",productsRoutes)
 app.use("/interactions", userInteractionRoutes);
 app.use("/orders", orderRoutes);
 
+// Landing Routes handle multiple paths
+app.use("/", landingRoutes);
 
+// 4. ERROR HANDLING
+app.use(globalErrorHandler);
 
 module.exports = app;

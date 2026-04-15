@@ -117,32 +117,20 @@ const UserNavbar = () => {
       {/* Navigation Menu */}
       <div className={`navMenu w-full lg:w-auto ${isMobileMenuOpen ? 'block' : 'hidden lg:block'}`}>
         <ul className="flex flex-col lg:flex-row gap-2 lg:gap-3 font-semibold items-center text-center pb-2 lg:pb-0">
-          <Link href="/users/Home">
-            <li className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/Home' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
+          <Link href="/users/Home" className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/Home' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
               <RiHome9Line /> Home
-            </li>
           </Link>
-          <Link href="/users/Products">
-            <li className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/Products' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
+          <Link href="/users/Products" className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/Products' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
               <RiBookReadLine /> Products
-            </li>
           </Link>
-        
-          
-          <Link href="/users/AboutUs">
-            <li className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/AboutUs' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
+          <Link href="/users/AboutUs" className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/AboutUs' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
               <FaRegHandPointRight /> About
-            </li>
           </Link>
-          <Link href="/users/ContactUs">
-            <li className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/ContactUs' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
+          <Link href="/users/ContactUs" className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/ContactUs' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
               <IoCallOutline /> Contact
-            </li>
           </Link>
-          <Link href="/users/Account">
-            <li className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/Account' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
+          <Link href="/users/Account" className={`flex gap-1 items-center text-base lg:text-lg hover:scale-95 transition-transform p-2 rounded-md ${pathname === '/users/Account' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}>
               <RiAccountCircleLine /> Account
-            </li>
           </Link>
         </ul>
       </div>

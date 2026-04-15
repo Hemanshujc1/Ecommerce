@@ -1,10 +1,11 @@
 const { validationResult } = require("express-validator");
 const adminService = require("../services/admin.service");
-const blacklistTokenModel = require("../models/BlacklistToken.model")
-const connectToDB = require("../db/mysql12.js");
+const { User, BlacklistToken } = require("../models");
+const { Op } = require("sequelize");
+const catchAsync = require("../utils/catchAsync");
+const ApiResponse = require("../utils/ApiResponse");
 
-
-module.exports.registerAdmin = async (req,res) => {
+module.exports.registerAdmin = catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array() });
@@ -12,246 +13,139 @@ module.exports.registerAdmin = async (req,res) => {
 
   const { name, email, password, role } = req.body;
 
-  try {
-    // If this is a protected route (with auth middleware), check permissions
-    if (req.admin && req.admin.role !== 'main_admin') {
-      return res.status(403).json({ message: "Access denied. Only main admin can create new admins." });
-    }
-
-    const admin = await adminService.createAdmin({ name, email, password, role: role || 'admin' });
-  
-    const token = adminService.generateAuthToken(admin.insertId);
-  
-    res.status(201).json({ token, adminId: admin.insertId });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  // Only main_admin can create new admins
+  if (req.admin && req.admin.role !== 'main_admin') {
+    return res.status(403).json(new ApiResponse(403, null, "Access denied. Only main admin can create new admins."));
   }
-  
-};
 
-module.exports.loginAdmin = async (req, res) => {
+  const admin = await adminService.createAdmin({ name, email, password, role: role || 'admin' });
+  const token = adminService.generateAuthToken(admin);
+
+  return res.status(201).json(new ApiResponse(201, { token, adminId: admin.id }, "Admin registered successfully"));
+});
+
+module.exports.loginAdmin = catchAsync(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: errors.array() });
   }
 
   const { email, password } = req.body;
+  const admin = await adminService.findAdminByEmail(email);
 
-  try {
-    const admin = await adminService.findAdminByEmail(email);
-
-    if (!admin) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-    const isMatch = await adminService.comparePassword(password, admin.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
-    const token = adminService.generateAuthToken(admin.id);
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,  
-      sameSite: 'Lax',
-      maxAge: 3600000  
-    });
-    
-    delete admin.password;
-    res.status(200).json({ token, admin });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  if (!admin || (admin.role !== 'admin' && admin.role !== 'main_admin')) {
+    return res.status(401).json(new ApiResponse(401, null, "Invalid email or password"));
   }
-};
-module.exports.getAdminProfile = async (req, res) => {
-  res.status(200).json(req.admin);
-};
 
-
-// module.exports.getAllAdmins = async (req, res) => {
-//   try {
-//      console.log("📡 GET /getAllAdmins hit");
-//     const [admins] = await connectToDB.query("SELECT id, name, email FROM admininfo");
-//     console.log("✅ Admins fetched:", admins);
-//     res.status(200).json(admins);
-//   } catch (err) {
-//     console.error("Error:", err)
-//     console.error("❌ Error fetching admins:", err); // See full error in terminal;
-//     res.status(500).json({ message: "Failed to get admins" });
-//   }
-// };
-// module.exports.deleteAdmin = async (req, res) => {
-//   const adminId = req.params.id;
-//   try {
-//     //console.log("📡 DELETE /delete/:id hit with ID:", adminId);
-//     const [result] = await connectToDB.query("DELETE FROM admininfo WHERE id = ?", [adminId]);
-//     if (result.affectedRows === 0) {
-//       return res.status(404).json({ message: "Admin not found" });
-//     }
-//     //console.log("✅ Admin deleted with ID:", adminId);
-//     res.status(200).json({ message: "Admin deleted successfully" });
-//   } catch (err) {
-//     console.error("Error", err);
-//     res.status(500).json({ message: "Failed to delete admin" });
-//   }
-// }   
-
-
-module.exports.getAllAdmins = async (req, res) => {
-  try {
-    // Check if the requesting admin is main_admin
-    if (req.admin.role !== 'main_admin') {
-      return res.status(403).json({ message: "Access denied. Only main admin can manage admins." });
-    }
-    
-    const connection = await connectToDB.createConnection();
-    const [admins] = await connection.query("SELECT id, name, email, role FROM admininfo");
-    await connection.end();
-
-    res.status(200).json(admins);
-  } catch (err) {
-    console.error("Error fetching admins:", err);
-    res.status(500).json({ message: "Failed to get admins" });
+  const isMatch = await adminService.comparePassword(password, admin.password);
+  if (!isMatch) {
+    return res.status(401).json(new ApiResponse(401, null, "Invalid email or password"));
   }
-};
 
-module.exports.deleteAdmin = async (req, res) => {
+  const token = adminService.generateAuthToken(admin);
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax',
+    maxAge: 3600000  
+  });
+  
+  const adminData = admin.toJSON();
+  delete adminData.password;
+  
+  return res.status(200).json(new ApiResponse(200, { token, admin: adminData }, "Login successful"));
+});
+
+module.exports.getAdminProfile = catchAsync(async (req, res) => {
+  return res.status(200).json(new ApiResponse(200, req.admin, "Profile fetched successfully"));
+});
+
+module.exports.getAllAdmins = catchAsync(async (req, res) => {
+  if (req.admin.role !== 'main_admin') {
+    return res.status(403).json(new ApiResponse(403, null, "Access denied. Only main admin can manage admins."));
+  }
+  
+  const admins = await User.findAll({
+    where: {
+      role: {
+        [Op.in]: ['admin', 'main_admin']
+      }
+    },
+    attributes: ['id', 'name', 'email', 'role']
+  });
+
+  return res.status(200).json(new ApiResponse(200, admins, "Admins fetched successfully"));
+});
+
+module.exports.deleteAdmin = catchAsync(async (req, res) => {
   const adminId = req.params.id;
-  try {
-    // Check if the requesting admin is main_admin
-    if (req.admin.role !== 'main_admin') {
-      return res.status(403).json({ message: "Access denied. Only main admin can delete admins." });
-    }
-
-    // Prevent main admin from deleting themselves
-    if (req.admin.id == adminId) {
-      return res.status(400).json({ message: "Cannot delete your own account." });
-    }
-
-    const connection = await connectToDB.createConnection();
-    
-    // Check if trying to delete another main admin
-    const [targetAdmin] = await connection.query("SELECT role FROM admininfo WHERE id = ?", [adminId]);
-    if (targetAdmin.length > 0 && targetAdmin[0].role === 'main_admin') {
-      await connection.end();
-      return res.status(400).json({ message: "Cannot delete another main admin." });
-    }
-
-    const [result] = await connection.query("DELETE FROM admininfo WHERE id = ?", [adminId]);
-    await connection.end();
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Admin not found" });
-    }
-
-    res.status(200).json({ message: "Admin deleted successfully" });
-  } catch (err) {
-    console.error("Error", err);
-    res.status(500).json({ message: "Failed to delete admin" });
+  if (req.admin.role !== 'main_admin') {
+    return res.status(403).json(new ApiResponse(403, null, "Access denied. Only main admin can delete admins."));
   }
-};
 
-module.exports.updateAdmin = async (req, res) => {
+  if (req.admin.id == adminId) {
+    return res.status(400).json(new ApiResponse(400, null, "Cannot delete your own account."));
+  }
+
+  const targetAdmin = await User.findByPk(adminId);
+  if (!targetAdmin || (targetAdmin.role !== 'admin' && targetAdmin.role !== 'main_admin')) {
+    return res.status(404).json(new ApiResponse(404, null, "Admin not found"));
+  }
+
+  if (targetAdmin.role === 'main_admin') {
+    return res.status(400).json(new ApiResponse(400, null, "Cannot delete another main admin."));
+  }
+
+  await targetAdmin.destroy();
+  return res.status(200).json(new ApiResponse(200, null, "Admin deleted successfully"));
+});
+
+module.exports.updateAdmin = catchAsync(async (req, res) => {
   const adminId = req.params.id;
   const { name, email, role } = req.body;
 
-  try {
-    // Check if the requesting admin is main_admin
-    if (req.admin.role !== 'main_admin') {
-      return res.status(403).json({ message: "Access denied. Only main admin can update admins." });
-    }
-
-    // Prevent changing role of main admin or making multiple main admins
-    if (role === 'main_admin' && req.admin.id != adminId) {
-      return res.status(400).json({ message: "Cannot assign main admin role to other admins." });
-    }
-
-    const connection = await connectToDB.createConnection();
-    
-    // Build dynamic query based on provided fields
-    const updates = [];
-    const values = [];
-    
-    if (name) {
-      updates.push("name = ?");
-      values.push(name);
-    }
-    if (email) {
-      updates.push("email = ?");
-      values.push(email);
-    }
-    if (role && req.admin.id == adminId) { // Only allow self role change for main admin
-      updates.push("role = ?");
-      values.push(role);
-    }
-    
-    if (updates.length === 0) {
-      await connection.end();
-      return res.status(400).json({ message: "No valid fields to update" });
-    }
-    
-    values.push(adminId);
-    
-    const [update] = await connection.query(
-      `UPDATE admininfo SET ${updates.join(", ")} WHERE id = ?`,
-      values
-    );
-    await connection.end();
-
-    if (update.affectedRows === 0) {
-      return res.status(404).json({ message: "Admin not found" });
-    }
-
-    res.status(200).json({ message: "Admin updated successfully" });
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ message: "Failed to update admin" });
+  if (req.admin.role !== 'main_admin') {
+    return res.status(403).json(new ApiResponse(403, null, "Access denied. Only main admin can update admins."));
   }
-};
 
-
-
-// module.exports.updateAdmin = async (req, res) => {
-//   const adminId = req.params.id;
-//   const { name, email } = req.body;
-
-//   try {
-//     //console.log("📡 PATCH /editAdmin/:id hit with ID:", adminId);
-//     const [update] = await connectToDB.query(
-//       `UPDATE admininfo SET name = ?, email = ? WHERE id = ?`,
-//       [name, email, adminId]
-//     );
-
-//     if (update.affectedRows === 0) {
-//       return res.status(404).json({ message: "Admin not found" });
-//     }
-
-//    // console.log("✅ Admin updated with ID:", adminId);
-//     res.status(200).json({ message: "Admin updated successfully" });
-//   } catch (err) {
-//     console.error("Error:", err);
-//     res.status(500).json({ message: "Failed to update admin" });
-//   }
-// };
-
-module.exports.logoutAdmin = async (req, res) => {
-  try {
-    res.clearCookie('token');
-    
-    // Get token from cookies or authorization header
-    let token = req.cookies.token;
-    if (!token && req.headers.authorization) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-    
-    // Only blacklist token if it exists
-    if (token) {
-      await blacklistTokenModel.create({ token });
-    }
-    
-    res.status(200).json({ message: "Logged Out" });
-  } catch (error) {
-    console.error("Admin logout error:", error);
-    res.status(500).json({ error: "Logout failed" });
+  if (role === 'main_admin' && req.admin.id != adminId) {
+    return res.status(400).json(new ApiResponse(400, null, "Cannot assign main admin role to other admins."));
   }
-};
 
+  const updates = {};
+  if (name) updates.name = name;
+  if (email) updates.email = email;
+  if (role && req.admin.id == adminId) updates.role = role;
 
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json(new ApiResponse(400, null, "No valid fields to update"));
+  }
+
+  const [updatedRowsCount] = await User.update(updates, { 
+    where: { 
+      id: adminId,
+      role: { [Op.in]: ['admin', 'main_admin'] } 
+    } 
+  });
+
+  if (updatedRowsCount === 0) {
+    return res.status(404).json(new ApiResponse(404, null, "Admin not found"));
+  }
+
+  return res.status(200).json(new ApiResponse(200, null, "Admin updated successfully"));
+});
+
+module.exports.logoutAdmin = catchAsync(async (req, res) => {
+  res.clearCookie('token');
+  
+  let token = req.cookies.token;
+  if (!token && req.headers.authorization) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  
+  if (token) {
+    await BlacklistToken.create({ token });
+  }
+  
+  return res.status(200).json(new ApiResponse(200, null, "Logged out successfully"));
+});

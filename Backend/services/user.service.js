@@ -1,4 +1,4 @@
-const userModel = require("../models/user.model");
+const { User } = require("../models");
 
 module.exports.createUser = async ({
   name,
@@ -12,34 +12,26 @@ module.exports.createUser = async ({
     throw new Error("All fields are required");
   }
 
-  return new Promise((resolve, reject) => {
-    userModel.createUser(
-      {
-        name,
-        username,
-        gender,
-        age,
-        email,
-        password,
-      },
-      (err, result) => {
-        if (err) return reject(err);
-        resolve(result);
-      }
-    );
+  // Create user using Sequelize
+  return await User.create({
+    name,
+    username,
+    gender,
+    age,
+    email,
+    password,
   });
 };
 
-module.exports.generateAuthToken = userModel.generateAuthToken;
+module.exports.generateAuthToken = (user) => {
+  return user.generateAuthToken();
+};
 
-module.exports.hashPassword = userModel.hashPassword || require("bcrypt").hash;
-module.exports.comparePassword = userModel.comparePassword; 
+module.exports.comparePassword = async (password, userPassword) => {
+  const bcrypt = require("bcrypt");
+  return await bcrypt.compare(password, userPassword);
+};
+
 module.exports.findUserByEmail = async (email) => {
-  return new Promise((resolve, reject) => {
-    userModel.findUserByEmail(email, (err, results) => {
-      if (err) return reject(err);
-      if (results.length === 0) return resolve(null);
-      resolve(results[0]);
-    });
-  });
+  return await User.findOne({ where: { email } });
 };

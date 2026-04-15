@@ -2,8 +2,12 @@
 import React, { useState, useEffect } from "react";
 import AdminSearchFilter from "@/components/AdminSearchFilter/AdminSearchFilter";
 import AdminPagination from "@/components/AdminPagination/AdminPagination";
+import AdminTable from "@/components/AdminTable/AdminTable";
+import { API_BASE_URL } from "@/lib/api.config";
+import { useAuth } from "@/context/AuthContext";
 
 const Page = () => {
+  const { admin } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,10 +29,102 @@ const Page = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
+
+  const adminTableColumns = [
+    { header: "ID", render: (admin) => <span className="font-medium text-gray-900">{admin.id}</span> },
+    {
+      header: "Name",
+      render: (admin) => (
+        editMode === admin.id ? (
+          <input
+            type="text"
+            value={editData.name ?? ""}
+            onChange={(e) =>
+              setEditData((prev) => ({
+                ...prev,
+                name: e.target.value,
+              }))
+            }
+            className="border border-gray-300 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          />
+        ) : (
+          admin.name
+        )
+      ),
+    },
+    {
+      header: "Email",
+      render: (admin) => (
+        editMode === admin.id ? (
+          <input
+            type="email"
+            value={editData.email ?? ""}
+            onChange={(e) =>
+              setEditData((prev) => ({
+                ...prev,
+                email: e.target.value,
+              }))
+            }
+            className="border border-gray-300 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          />
+        ) : (
+          admin.email
+        )
+      ),
+    },
+    {
+      header: "Role",
+      render: (admin) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          admin.role === 'main_admin' 
+            ? 'bg-purple-100 text-purple-800' 
+            : 'bg-blue-100 text-blue-800'
+        }`}>
+          {admin.role === 'main_admin' ? 'Main Admin' : 'Admin'}
+        </span>
+      ),
+    },
+    {
+      header: "Actions",
+      render: (admin) => (
+        editMode === admin.id ? (
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleEdit(admin.id, editData)}
+              className="text-green-600 hover:text-green-900 px-3 py-1 rounded hover:bg-green-50 transition-colors shadow-sm border border-green-200"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditMode(null)}
+              className="text-gray-600 hover:text-gray-900 px-3 py-1 rounded hover:bg-gray-50 transition-colors shadow-sm border border-gray-200"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              onClick={() => startEdit(admin)}
+              className="text-yellow-600 hover:text-yellow-900 px-3 py-1 rounded hover:bg-yellow-50 transition-colors shadow-sm border border-yellow-200"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => handleDelete(admin.id)}
+              className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50 transition-colors shadow-sm border border-red-200"
+            >
+              Delete
+            </button>
+          </div>
+        )
+      ),
+    },
+  ];
   const fetchAdmins = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:4001/admins/getAllAdmins", {
+      const res = await fetch(`${API_BASE_URL}/admins/getAllAdmins`, {
         method: "GET",
         credentials: "include",
       });
@@ -41,7 +137,7 @@ const Page = () => {
         console.error("Failed to fetch admins:", data.message);
         throw new Error("Failed to fetch admins");
       }
-      setAdmins(data);
+      setAdmins(data.data || []);
     } catch (err) {
       console.error(err);
       setError("Failed to load admins");
@@ -51,36 +147,18 @@ const Page = () => {
   };
   
   useEffect(() => {
-    const fetchAdminProfile = async () => {
-      try {
-        const res = await fetch("http://localhost:4001/admins/profile", {
-          method: "GET",
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setAdminProfile(data);
-          
-          // Only fetch admins if user is main_admin
-          if (data.role === 'main_admin') {
-            await fetchAdmins();
-          } else {
-            setAccessDenied(true);
-            setLoading(false);
-          }
-        } else {
-          setAccessDenied(true);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error("Failed to fetch admin profile", err);
-        setAccessDenied(true);
-        setLoading(false);
-      }
-    };
-
-    fetchAdminProfile();
-  }, []);
+    if (!admin) {
+      setAccessDenied(true);
+      setLoading(false);
+      return;
+    }
+    if (admin.role === 'main_admin') {
+      fetchAdmins();
+    } else {
+      setAccessDenied(true);
+      setLoading(false);
+    }
+  }, [admin]);
 
   useEffect(() => {
     filterAndSortAdmins();
@@ -150,7 +228,7 @@ const Page = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:4001/admins/register", {
+      const res = await fetch(`${API_BASE_URL}/admins/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,7 +262,7 @@ const Page = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:4001/admins/deleteAdmin/${adminId}`,
+        `${API_BASE_URL}/admins/deleteAdmin/${adminId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -208,7 +286,7 @@ const Page = () => {
   const handleEdit = async (adminId, updatedAdminData) => {
     try {
       const res = await fetch(
-        `http://localhost:4001/admins/editAdmin/${adminId}`,
+        `${API_BASE_URL}/admins/editAdmin/${adminId}`,
         {
           method: "PATCH",
           headers: {
@@ -239,12 +317,12 @@ const Page = () => {
 
   const startEdit = (admin) => {
     setEditMode(admin.id);
-    setEditData({ name: admin.name, email: admin.email });
+    setEditData({ name: admin.name ?? "", email: admin.email ?? "" });
   };
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -254,7 +332,7 @@ const Page = () => {
 
   if (accessDenied) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl shadow">
           <div className="text-6xl mb-4">🚫</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
@@ -273,9 +351,9 @@ const Page = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Manage Admins</h1>
+    <div className="p-3 md:p-6">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
+        <h1 className="text-lg md:text-2xl font-bold">Manage Admins</h1>
         <div className="text-sm text-gray-600">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredAdmins.length)} of {filteredAdmins.length} admins
         </div>
@@ -393,102 +471,11 @@ const Page = () => {
         </div>
       ) : (
         <>
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <table className="w-full table-auto">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentAdmins.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{admin.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {editMode === admin.id ? (
-                        <input
-                          type="text"
-                          value={editData.name}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              name: e.target.value,
-                            }))
-                          }
-                          className="border border-gray-300 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      ) : (
-                        admin.name
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {editMode === admin.id ? (
-                        <input
-                          type="email"
-                          value={editData.email}
-                          onChange={(e) =>
-                            setEditData((prev) => ({
-                              ...prev,
-                              email: e.target.value,
-                            }))
-                          }
-                          className="border border-gray-300 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      ) : (
-                        admin.email
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        admin.role === 'main_admin' 
-                          ? 'bg-purple-100 text-purple-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {admin.role === 'main_admin' ? 'Main Admin' : 'Admin'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {editMode === admin.id ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(admin.id, editData)}
-                            className="text-green-600 hover:text-green-900 px-3 py-1 rounded hover:bg-green-50 transition-colors"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditMode(null)}
-                            className="text-gray-600 hover:text-gray-900 px-3 py-1 rounded hover:bg-gray-50 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => startEdit(admin)}
-                            className="text-yellow-600 hover:text-yellow-900 px-3 py-1 rounded hover:bg-yellow-50 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(admin.id)}
-                            className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable 
+            columns={adminTableColumns} 
+            data={currentAdmins} 
+            emptyMessage={admins.length > 0 ? "No admins match your filters" : "No admins found"}
+          />
 
           {/* Pagination */}
           <AdminPagination

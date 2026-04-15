@@ -75,7 +75,7 @@ const CollectionCard = ({ collections = [] }) => {
               <Image
                 width={300}
                 height={200}
-                src={`http://localhost:4001/upload${item.img?.startsWith('/') ? '' : '/'}${item.img}`}
+                src={getImageUrl(item.img)}
                 alt={item.title || "Collection Image"}
                 loading="lazy"
                 className="object-cover w-full h-full"
