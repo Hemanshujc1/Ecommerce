@@ -7,6 +7,7 @@ import {
   getUserWishlist,
 } from "../../lib/api";
 import { getUserId, isAuthenticated } from "../../lib/auth";
+import { getImageUrl } from "../../lib/image.helper";
 import toast from "react-hot-toast";
 
 const WishlistCard = ({ onWishlistUpdate }) => {

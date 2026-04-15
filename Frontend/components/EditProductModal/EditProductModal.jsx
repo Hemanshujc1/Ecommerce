@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { fetchProductById, updateProduct } from "../../lib/api";
+import { getImageUrl } from "../../lib/image.helper";
 
 const EditProductModal = ({ product, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ const EditProductModal = ({ product, onClose, onSuccess }) => {
       setLoading(true);
       const response = await fetchProductById(product.id);
       if (response && response.success) {
-        const productDetails = response.product;
+        const productDetails = response.data;
         setProductData(productDetails);
         setFormData({
           product_name: productDetails.product_name || "",
@@ -620,7 +621,7 @@ const EditProductModal = ({ product, onClose, onSuccess }) => {
                       {variant.mainImage && (
                         <div className="mb-2">
                           <img
-                            src={`http://localhost:5000${variant.mainImage}`}
+                            src={getImageUrl(variant.mainImage)}
                             alt="Main"
                             className="w-20 h-20 object-cover rounded"
                           />
@@ -767,7 +768,7 @@ const EditProductModal = ({ product, onClose, onSuccess }) => {
                           (image, imageIndex) => (
                             <div key={imageIndex} className="relative">
                               <img
-                                src={`http://localhost:5000${image}`}
+                                src={getImageUrl(image)}
                                 alt={`Related ${imageIndex}`}
                                 className="w-full h-24 object-cover rounded"
                               />
@@ -813,7 +814,7 @@ const EditProductModal = ({ product, onClose, onSuccess }) => {
                         {(variant.videos || []).map((video, videoIndex) => (
                           <div key={videoIndex} className="relative">
                             <video
-                              src={`http://localhost:5000${video}`}
+                              src={getImageUrl(video)}
                               className="w-full h-24 object-cover rounded"
                               controls
                             />

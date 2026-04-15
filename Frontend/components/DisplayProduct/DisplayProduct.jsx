@@ -19,6 +19,7 @@ import {
   updateCartInteraction,
 } from "../../lib/api";
 import { getUserId, isAuthenticated } from "../../lib/auth";
+import { getImageUrl } from "../../lib/image.helper";
 import toast from "react-hot-toast";
 
 const DisplayProduct = () => {
@@ -420,106 +421,115 @@ const DisplayProduct = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               {currentProducts.map((product) => {
-            const id = product.id || product._id;
-            const quantity = cartQuantities[id] || 0;
-            const inWishlist = wishlist[id] || false;
+                const id = product.id || product._id;
+                const quantity = cartQuantities[id] || 0;
+                const inWishlist = wishlist[id] || false;
 
-            const imageUrl = getImageUrl(product.main_image);
+                const imageUrl = getImageUrl(
+                  product.main_image || product.mainImage || product.image
+                );
 
-            return (
-              <div
-                key={id}
-                className="bg-[whitesmoke] border border-gray-100 rounded-md shadow-md hover:scale-105 transition duration-200"
-              >
-                <Link href={`/users/Productdisplay/${id}`} className="block">
-                  <div className="relative w-full h-[300px] overflow-hidden rounded-t-md">
-                    <Image
-                      width={500}
-                      height={500}
-                      src={imageUrl}
-                      alt={product.product_name || "Product"}
-                      className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
-                    />
-                  </div>
-                </Link>
-                <div className="p-5 flex flex-col gap-2 text-black">
-                  <Link href={`/users/Productdisplay/${id}`}>
-                    <h2 className="text-lg text-gray-700 font-semibold hover:underline cursor-pointer">
-                      {(product.product_name || "Product").slice(0, 50)}
-                      {product.product_name?.length > 50 ? "..." : ""}
-                    </h2>
-                  </Link>
+                return (
+                  <div
+                    key={id}
+                    className="flex flex-col bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden"
+                  >
+                    <Link href={`/users/Productdisplay/${id}`} className="block relative">
+                      <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+                        <Image
+                          fill
+                          src={imageUrl}
+                          unoptimized
+                          alt={product.product_name || product.name || "Product"}
+                          className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                      {product.discount > 0 && (
+                        <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
+                          -{product.discount}%
+                        </div>
+                      )}
+                    </Link>
+                    
+                    <div className="p-4 flex flex-col flex-grow gap-2 text-black">
+                      <div className="min-h-[3rem]">
+                        <Link href={`/users/Productdisplay/${id}`}>
+                          <h2 className="text-sm font-bold text-gray-800 hover:text-red-600 transition-colors leading-tight line-clamp-2">
+                            {product.product_name || product.name || "Product"}
+                          </h2>
+                        </Link>
+                        <p className="text-xs text-gray-500 mt-1 uppercase tracking-tighter">
+                          {product.brand || "Electronic"}
+                        </p>
+                      </div>
 
-                  <p className="text-sm text-gray-700">
-                    {product.price
-                      ? `₹${product.price}`
-                      : "Price not available"}
-                  </p>
-                  {product.discount && (
-                    <p className="text-xs text-green-600">
-                      {product.discount}% off
-                    </p>
-                  )}
-                  {product.rating && (
-                    <p className="text-xs text-yellow-600">
-                      ⭐ {product.rating}/5
-                    </p>
-                  )}
-
-                  {quantity > 0 ? (
-                    <div className="flex items-center justify-between gap-2 mt-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleDecreaseQuantity(id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 font-bold"
-                        >
-                          -
-                        </button>
-                        <span className="px-3 py-1 bg-gray-100 rounded min-w-[40px] text-center font-semibold">
-                          {quantity}
+                      <div className="flex items-baseline gap-2 mt-auto">
+                        <span className="text-lg font-bold text-red-600">
+                          ₹{product.price}
                         </span>
+                        {product.rating && (
+                          <span className="text-[10px] flex items-center bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-100 font-medium ml-auto">
+                            ⭐ {product.rating}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-gray-50">
+                        {quantity > 0 ? (
+                          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-1 border">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDecreaseQuantity(id)}
+                                className="w-8 h-8 flex items-center justify-center bg-white border text-gray-600 rounded-md hover:bg-gray-100 transition shadow-sm font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="w-8 text-center text-sm font-bold">
+                                {quantity}
+                              </span>
+                              <button
+                                onClick={() => handleIncreaseQuantity(id)}
+                                className="w-8 h-8 flex items-center justify-center bg-white border text-gray-600 rounded-md hover:bg-gray-100 transition shadow-sm font-bold"
+                                disabled={quantity >= (product.total_stock || 0)}
+                              >
+                                +
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => handleRemoveFromCart(id)}
+                              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 transition"
+                              title="Remove"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleAddToCart(id)}
+                            className="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-all font-bold text-xs uppercase tracking-wider active:scale-[0.98]"
+                          >
+                            Add to Cart
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => handleIncreaseQuantity(id)}
-                          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 font-bold"
-                          disabled={quantity >= (product.total_stock || 0)}
+                          onClick={() => toggleWishlist(id)}
+                          className={`w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                            inWishlist
+                              ? "bg-red-50 text-red-600 border-red-200"
+                              : "bg-white text-gray-900 border-gray-200 hover:bg-gray-50"
+                          }`}
                         >
-                          +
+                          {inWishlist ? "❤️ Saved" : "♡ Save to Wishlist"}
                         </button>
                       </div>
-                      <button
-                        onClick={() => handleRemoveFromCart(id)}
-                        className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs"
-                        title="Remove from cart"
-                      >
-                        🗑️
-                      </button>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => handleAddToCart(id)}
-                      className="mt-2 bg-black text-white px-4 py-2 rounded hover:bg-gray-400 transition uppercase text-sm tracking-wide"
-                    >
-                      Add to Cart
-                    </button>
-                  )}
-
-                  {/* Wishlist Logic */}
-                  <button
-                    onClick={() => toggleWishlist(id)}
-                    className={`mt-2 px-4 py-2 rounded transition uppercase text-sm tracking-wide ${
-                      inWishlist
-                        ? "bg-red-500 text-white"
-                        : "bg-black text-white hover:bg-gray-400"
-                    }`}
-                  >
-                    {inWishlist ? "❤️ Added to Wishlist" : "Add to Wishlist"}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Pagination */}

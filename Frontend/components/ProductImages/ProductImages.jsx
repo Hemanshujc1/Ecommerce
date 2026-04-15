@@ -32,8 +32,8 @@ const ProductImages = ({product}) => {
   };
     
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative">
+    <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-md mx-auto lg:mx-0">
+      <div className="relative w-full aspect-square sm:aspect-[4/5] md:aspect-square bg-gray-50 rounded-xl overflow-hidden border">
         {imageError && (
           <div className="absolute top-2 left-2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded z-10">
             Image loading failed
@@ -42,40 +42,37 @@ const ProductImages = ({product}) => {
         <Image
           src={selectedImage || "/images/product-placeholder.jpg"}
           alt={product.name || "Product"}
-          width={500}
-          height={500}
-          className="rounded-xl border w-full h-auto"
+          fill
+          unoptimized
+          className="object-contain"
           onError={handleImageError}
           priority
         />
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      
+      {/* Thumbnails */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {product.relatedImages && product.relatedImages.length > 0 && product.relatedImages.map((img, index) => (
-          <Image
+          <div 
             key={index}
-            src={img || "/images/product-placeholder.jpg"}
-            alt={`Thumbnail ${index}`}
-            width={80}
-            height={80}
-            className={`cursor-pointer border rounded flex-shrink-0 ${
-              selectedImage === img ? "border-red-500 border-2" : "border-gray-300"
+            className={`relative flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+              selectedImage === img ? "border-red-500 shadow-sm" : "border-gray-100 hover:border-gray-300"
             }`}
             onClick={() => setSelectedImage(img)}
-            onError={(e) => {
-              console.log('Thumbnail failed to load:', e.target.src);
-              e.target.src = "/images/product-placeholder.jpg";
-            }}
-          />
+          >
+            <Image
+              src={img || "/images/product-placeholder.jpg"}
+              alt={`Thumbnail ${index}`}
+              fill
+              unoptimized
+              className="object-cover"
+              onError={(e) => {
+                e.target.src = "/images/product-placeholder.jpg";
+              }}
+            />
+          </div>
         ))}
       </div>
-      
-      {/* Debug info in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-          <div>Selected: {selectedImage}</div>
-          <div>Available: {product.relatedImages?.length || 0} images</div>
-        </div>
-      )}
     </div>
   );
 };

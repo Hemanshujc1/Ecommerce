@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { getUserInteractions, getPopularProducts } from "../../lib/api";
 import { getUserId, isAuthenticated } from "../../lib/auth";
+import { getImageUrl } from "../../lib/image.helper";
 
 const UserInteractionDashboard = () => {
   const [userInteractions, setUserInteractions] = useState([]);

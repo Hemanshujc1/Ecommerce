@@ -9,7 +9,7 @@ import { MEDIA_URL } from "./api.config";
  * @returns {string} - The full URL (e.g. "http://localhost:4001/upload/products/img.jpg")
  */
 export const getImageUrl = (path) => {
-  if (!path) return "/placeholder-image.png"; // Fallback
+  if (!path) return "/images/product-placeholder.jpg"; // Fallback
   if (path.startsWith("http")) return path;
 
   // Remove leading slashes and redundant 'upload/' prefix if it exists in the stored path

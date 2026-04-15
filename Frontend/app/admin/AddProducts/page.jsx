@@ -16,9 +16,9 @@ import { API_BASE_URL } from "@/lib/api.config";const AddProductPage = () => {
     const { name, value } = e.target;
     setGeneralData((prev) => ({
       ...prev,
-      [name]: name === "category" ? value.toLowerCase() : value,
-      [name]: name === "main_category" ? value.toLowerCase() : value,
-      [name]: name === "sub_category" ? value.toLowerCase() : value,
+      [name]: ["category", "main_category", "sub_category"].includes(name)
+        ? value.toLowerCase()
+        : value,
     }));
   };
   const handleSectionChange = (index, field, value) => {
@@ -89,6 +89,7 @@ import { API_BASE_URL } from "@/lib/api.config";const AddProductPage = () => {
     setVariants(updated);
   };
   const handleFileChange = (variantIndex, field, file) => {
+    if (!file) return;
     const updated = [...variants];
     if (field === "relatedImages") {
       if (updated[variantIndex].relatedImages.length >= 4) {
@@ -434,7 +435,7 @@ import { API_BASE_URL } from "@/lib/api.config";const AddProductPage = () => {
                     key={imgIdx}
                     className="flex justify-between items-center"
                   >
-                    <span className="text-sm">{img.name}</span>
+                    <span className="text-sm">{img?.name}</span>
                     <button
                       type="button"
                       onClick={() => removeFile(i, "relatedImages", imgIdx)}
@@ -462,7 +463,7 @@ import { API_BASE_URL } from "@/lib/api.config";const AddProductPage = () => {
                     key={vidIdx}
                     className="flex justify-between items-center"
                   >
-                    <span className="text-sm">{vid.name}</span>
+                    <span className="text-sm">{vid?.name}</span>
                     <button
                       type="button"
                       onClick={() => removeFile(i, "videos", vidIdx)}

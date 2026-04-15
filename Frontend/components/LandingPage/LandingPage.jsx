@@ -16,12 +16,19 @@ const LandingPage = () => {
         const res = await fetch(`${API_BASE_URL}/landing`);
         if (!res.ok) { setLoading(false); return; }
         const data = await res.json();
-        const processedCollections = (data.collections || []).map((c) => ({
-          ...c,
-          img: c.img || c.main_image || "",
-          title: c.title || c.product_name || "Collection",
-          description: c.description || c.short_description || "Explore our collection",
-        }));
+        const processedCollections = (data.collections || []).map((c) => {
+          let imagePath = c.img || c.main_image || "";
+          // If it's just a filename (no slash), it's likely a collection image that needs the prefix
+          if (imagePath && !imagePath.includes("/") && !imagePath.startsWith("http")) {
+            imagePath = `collection/${imagePath}`;
+          }
+          return {
+            ...c,
+            img: imagePath,
+            title: c.title || c.product_name || "Collection",
+            description: c.description || c.short_description || "Explore our collection",
+          };
+        });
         setLanding({ ...data, collections: processedCollections });
       } catch (err) {
         setError(err.message);

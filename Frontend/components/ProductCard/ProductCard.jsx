@@ -176,17 +176,19 @@ const ProductCard = ({ title, items }) => {
           return (
             <div key={index} className="flex flex-col items-start gap-3 relative bg-white rounded-lg shadow-sm p-2">
               <div className="relative w-full aspect-square rounded-md hover:scale-95 transition-transform overflow-hidden">
-                {item?.img && (
+                {(item?.img || item?.main_image || item?.mainImage || item?.image) && (
                   <img
-                    src={getImageUrl(item.img)}
-                    alt={item.productname}
+                    src={getImageUrl(item.img || item.main_image || item.mainImage || item.image)}
+                    alt={item.productname || item.product_name || item.name || "Product"}
                     className="object-contain rounded-md w-full h-full"
                   />
                 )}
               </div>
 
               <div className="text-black text-left flex flex-col gap-1 w-full">
-                <h3 className="text-sm sm:text-base font-semibold uppercase line-clamp-2">{item.productname}</h3>
+                <h3 className="text-sm sm:text-base font-semibold uppercase line-clamp-2">
+                  {item.productname || item.product_name || item.name || "Product"}
+                </h3>
                 <p className="text-sm">{item.price}</p>
 
                 {quantity > 0 ? (

@@ -6,6 +6,7 @@ import {
   FaRegArrowAltCircleRight,
   FaRegArrowAltCircleLeft,
 } from "react-icons/fa";
+import { getImageUrl } from "../../lib/image.helper";
 
 const CollectionCard = ({ collections = [] }) => {
   const [startIndex, setStartIndex] = useState(0);
