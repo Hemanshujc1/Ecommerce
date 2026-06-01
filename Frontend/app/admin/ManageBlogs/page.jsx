@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import AdminSearchFilter from "@/components/AdminSearchFilter/AdminSearchFilter";
 import AdminPagination from "@/components/AdminPagination/AdminPagination";
 import { API_BASE_URL } from "@/lib/api.config";
+import { getImageUrl } from "@/lib/image.helper";
+import Image from "next/image";
 const page = () => {
   const [blogs, setBlogs] = useState([]);
   const [filteredBlogs, setFilteredBlogs] = useState([]);
@@ -12,11 +14,13 @@ const page = () => {
 
   const [formData, setFormData] = useState({
     title: "",
-    short_description:"",
+    short_description: "",
     description: "",
     date: "",
     image: null,
+    existingImage: null,
   });
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Search and Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,7 +34,13 @@ const page = () => {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "image") {
-      setFormData({ ...formData, image: files[0] });
+      const file = files[0];
+      setFormData({ ...formData, image: file });
+      if (file) {
+        setPreviewUrl(URL.createObjectURL(file));
+      } else {
+        setPreviewUrl(null);
+      }
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -138,8 +148,9 @@ const page = () => {
 
       if (res.ok) {
         alert(editingId ? "Blog updated!" : "Blog added!");
-        setFormData({ title: "",short_description:"", description: "", date: "", image: null });
+        setFormData({ title: "", short_description: "", description: "", date: "", image: null, existingImage: null });
         setEditingId(null);
+        setPreviewUrl(null);
         e.target.reset();
         fetchBlogs();
       } else {
@@ -170,7 +181,10 @@ const page = () => {
       description: blog.description,
       date: blog.date?.split("T")[0] || "", // strip time
       image: null,
+      existingImage: blog.image,
     });
+    setPreviewUrl(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (loading) {
@@ -194,62 +208,125 @@ const page = () => {
 
       <form
         onSubmit={handleAddOrEditBlog}
-        className={`space-y-4 p-6 rounded-xl shadow max-w-3xl mb-8 ${
-          editingId ? "bg-yellow-50" : "bg-white"
+        className={`space-y-6 p-6 md:p-8 rounded-2xl shadow-lg border mb-10 transition-colors ${
+          editingId ? "bg-indigo-50 border-indigo-200" : "bg-white border-gray-100"
         }`}
       >
-        <h2 className="text-xl font-semibold">
-          {editingId ? "Edit Blog" : "Add New Blog"}
-        </h2>
+        <div className="flex justify-between items-center border-b pb-4 mb-4 border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {editingId ? "✎ Edit Blog" : "Add New Blog"}
+          </h2>
+          {editingId && (
+            <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
+              Editing Mode
+            </span>
+          )}
+        </div>
 
-        <input
-          type="text"
-          name="title"
-          placeholder="Blog Title"
-          value={formData.title}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-         <textarea
-          name="short_description"
-          placeholder="Short Description"
-          value={formData.short_description}
-          onChange={handleChange}
-          rows={4}
-          className="w-full p-2 border rounded"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Title */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-gray-700">Blog Title <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              name="title"
+              placeholder="Enter blog title..."
+              value={formData.title}
+              onChange={handleChange}
+              maxLength={100}
+              required
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            />
+            <div className="text-xs text-right text-gray-500">{formData.title.length}/100</div>
+          </div>
 
-        <textarea
-          name="description"
-          placeholder="Blog Description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={4}
-          className="w-full p-2 border rounded"
-        />
+          {/* Date */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-gray-700">Publish Date <span className="text-red-500">*</span></label>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            />
+          </div>
+        </div>
 
-        <input
-          type="date"
-          name="date"
-          value={formData.date}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
+        {/* Short Description */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700">Short Description <span className="text-red-500">*</span></label>
+          <textarea
+            name="short_description"
+            placeholder="A brief summary of the blog..."
+            value={formData.short_description}
+            onChange={handleChange}
+            rows={3}
+            maxLength={250}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+          />
+          <div className="text-xs text-right text-gray-500">{formData.short_description.length}/250</div>
+        </div>
 
-        <input
-          type="file"
-          name="image"
-          accept="image/*"
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
+        {/* Full Description */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700">Full Content <span className="text-red-500">*</span></label>
+          <textarea
+            name="description"
+            placeholder="Write the full blog content here..."
+            value={formData.description}
+            onChange={handleChange}
+            rows={8}
+            maxLength={5000}
+            required
+            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+          />
+          <div className="text-xs text-right text-gray-500">{formData.description.length}/5000</div>
+        </div>
 
-        <div className="flex gap-4">
+        {/* Image Upload & Preview */}
+        <div className="flex flex-col gap-3">
+          <label className="text-sm font-semibold text-gray-700">Blog Cover Image {editingId ? "" : <span className="text-red-500">*</span>}</label>
+          
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+            {/* Display Preview */}
+            {(previewUrl || formData.existingImage) && (
+              <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm flex-shrink-0">
+                <Image
+                  src={previewUrl || getImageUrl(formData.existingImage)}
+                  alt="Blog Preview"
+                  fill
+                  className="object-fit"
+                />
+              </div>
+            )}
+
+            <div className="flex-1 w-full">
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleChange}
+                required={!editingId} // Required only when adding a new blog
+                className="w-full p-3 border border-gray-300 border-dashed rounded-lg bg-gray-50 text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition cursor-pointer"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                {editingId 
+                  ? "Select a new image to replace the current one. Leave empty to keep existing image." 
+                  : "Upload a high-quality cover image. Max size: 5MB."}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200">
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            className="flex-1 bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-blue-700 transition transform hover:-translate-y-0.5"
           >
-            {editingId ? "Update Blog" : "Add Blog"}
+            {editingId ? "Update Blog Post" : "Publish Blog Post"}
           </button>
 
           {editingId && (
@@ -258,14 +335,16 @@ const page = () => {
               onClick={() => {
                 setFormData({
                   title: "",
-                  short_description:"",
+                  short_description: "",
                   description: "",
                   date: "",
                   image: null,
+                  existingImage: null,
                 });
                 setEditingId(null);
+                setPreviewUrl(null);
               }}
-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+              className="flex-1 bg-gray-500 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-gray-600 transition"
             >
               Cancel Edit
             </button>
@@ -298,31 +377,58 @@ const page = () => {
         </div>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {currentBlogs.map((blog) => (
               <div
                 key={blog.id}
-                className="border rounded-lg p-4 bg-white shadow flex flex-col md:flex-row items-start md:items-center justify-between hover:shadow-md transition-shadow"
+                className="group flex flex-col bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden relative"
               >
-                <div className="space-y-1 flex-1">
-                  <h3 className="text-lg font-bold">{blog.title}</h3>
-                  <p className="text-gray-600 text-sm">{blog.short_description}</p>
-                  <p className="text-gray-600 text-sm line-clamp-2">{blog.description}</p>
-                  <p className="text-gray-400 text-sm">Posted on: {new Date(blog.date).toLocaleDateString()}</p>
-                </div>
-                <div className="mt-2 md:mt-0 flex gap-2">
+                {/* Action Buttons (Visible on Hover) */}
+                <div className="absolute top-3 right-3 flex gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <button
                     onClick={() => handleEdit(blog)}
-                    className="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition-colors"
+                    title="Edit Blog"
+                    className="bg-white/90 backdrop-blur-sm p-2.5 rounded-full text-blue-600 hover:bg-blue-600 hover:text-white shadow-md transition-colors"
                   >
-                    Edit
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                   </button>
                   <button
                     onClick={() => handleDelete(blog.id)}
-                    className="bg-red-500 text-white text-sm px-4 py-2 rounded hover:bg-red-600 transition-colors"
+                    title="Delete Blog"
+                    className="bg-white/90 backdrop-blur-sm p-2.5 rounded-full text-red-600 hover:bg-red-600 hover:text-white shadow-md transition-colors"
                   >
-                    Delete
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   </button>
+                </div>
+
+                {/* Blog Image */}
+                <div className="relative w-full h-48 bg-gray-50 overflow-hidden">
+                  <Image 
+                    src={getImageUrl(blog.image)} 
+                    alt={blog.title} 
+                    fill 
+                    className="object- group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  {/* Subtle Gradient Overlay for Text Readability if needed */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+                
+                {/* Blog Info */}
+                <div className="p-5 flex flex-col flex-1">
+                  <div className="mb-2">
+                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      {new Date(blog.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-extrabold text-gray-900 line-clamp-1 mb-2 group-hover:text-blue-600 transition-colors">{blog.title}</h3>
+                  <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed mb-4 flex-1">
+                    {blog.short_description || blog.description}
+                  </p>
+
+                  <div className="pt-4 border-t border-gray-100 flex justify-between items-center mt-auto md:hidden">
+                     {/* Mobile fallback actions since hover is hard on mobile */}
+                     <span className="text-xs text-gray-400 font-medium">Tap top-right to edit</span>
+                  </div>
                 </div>
               </div>
             ))}

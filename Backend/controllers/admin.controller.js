@@ -47,7 +47,7 @@ module.exports.loginAdmin = catchAsync(async (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Lax',
-    maxAge: 3600000  
+    maxAge: 86400000  
   });
   
   const adminData = admin.toJSON();

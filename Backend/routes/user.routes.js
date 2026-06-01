@@ -19,7 +19,7 @@ router.post("/send-discount", userController.sendEmailToUser);
 
 router.post("/Newsletter", userController.subscribeNewsletter);
 router.get("/Newsletter", userController.getallNewsletter);
-router.delete("/Newsletter/:id", userController.deleteEnquiry);
+router.delete("/Newsletter/:id", userController.deleteNewsletter);
 
 router.delete("/unsubscribe", userController.unsubscribeNewsletter);
 

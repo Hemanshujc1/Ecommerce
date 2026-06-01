@@ -36,15 +36,18 @@ const AdminLogoutPage = () => {
             height={200}
             src="/images/post-image4.jpg"
             alt="Admin Logout Illustration"
-            className="object-cover w-full h-full"
+            className="object-fit w-full h-full"
           />
         </div>
 
         {/* Logout Message Section */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center items-center text-center">
-          <h2 className="text-3xl font-semibold text-black mb-4">Admin Logout</h2>
+          <h2 className="text-3xl font-semibold text-black mb-4">
+            Admin Logout
+          </h2>
           <p className="text-gray-600 mb-6">
-            Are you sure you want to log out from the admin panel? You'll need to log in again to access admin features.
+            Are you sure you want to log out from the admin panel? You'll need
+            to log in again to access admin features.
           </p>
           <div className="flex gap-4">
             <button

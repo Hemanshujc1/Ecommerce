@@ -22,13 +22,12 @@ const UserInteractionDashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const userId = getUserId();
-      
-      // Load user interactions and popular products in parallel
+
       const [interactionsResponse, popularResponse] = await Promise.all([
         getUserInteractions(userId),
-        getPopularProducts(10)
+        getPopularProducts(10),
       ]);
 
       if (interactionsResponse.success) {
@@ -49,16 +48,18 @@ const UserInteractionDashboard = () => {
   if (!isAuthenticated()) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-600 text-lg">Please login to view your interaction dashboard</p>
+        <p className="text-gray-500 text-base font-light">
+          Please login to view your interaction dashboard
+        </p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        <p className="text-gray-600 ml-4">Loading dashboard...</p>
+      <div className="flex flex-col justify-center items-center h-64 space-y-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+        <p className="text-sm text-gray-500 font-light">Loading analytics...</p>
       </div>
     );
   }
@@ -66,10 +67,10 @@ const UserInteractionDashboard = () => {
   if (error) {
     return (
       <div className="text-center py-16">
-        <p className="text-red-600 text-lg">{error}</p>
-        <button 
+        <p className="text-red-650 text-sm font-medium">{error}</p>
+        <button
           onClick={loadDashboardData}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="mt-4 bg-black text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-gray-800 transition"
         >
           Try Again
         </button>
@@ -78,135 +79,157 @@ const UserInteractionDashboard = () => {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Your Product Interactions</h1>
-
+    <div className="space-y-12">
+      
       {/* User Interactions Section */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Your Recent Interactions</h2>
+      <section className="space-y-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Your Recent Activity</h2>
+          <p className="text-xs text-gray-500 font-light mt-1">Products you have interacted with or items saved in wishlist/cart.</p>
+        </div>
+
         {userInteractions.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-600">No interactions yet. Start browsing products!</p>
+          <div className="text-center py-16 border border-dashed border-gray-200 rounded-2xl">
+            <p className="text-gray-500 text-sm font-light">No activity interactions recorded yet. Start browsing the collections!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {userInteractions.map((interaction) => (
               <div
                 key={interaction.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between gap-4"
               >
-                {/* Product Image */}
-                {interaction.main_image && (
-                  <div className="w-full h-32 bg-gray-100 rounded overflow-hidden mb-3">
-                    <img
-                      src={getImageUrl(interaction.main_image)}
-                      alt={interaction.product_name}
-                      className="w-full h-full object-cover"
-                    />
+                <div>
+                  {/* Product Image */}
+                  {interaction.main_image && (
+                    <div className="aspect-video bg-gray-50 rounded-xl overflow-hidden mb-3 border border-gray-100">
+                      <img
+                        src={getImageUrl(interaction.main_image)}
+                        alt={interaction.product_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Product Info */}
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">
+                      {interaction.product_name}
+                    </h4>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                      {interaction.brand}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-sm font-black text-gray-950">₹{interaction.price}</span>
+                      {interaction.discount > 0 && (
+                        <span className="text-[9px] font-bold text-red-650 bg-red-50 px-2 py-0.5 rounded-md">
+                          -{interaction.discount}% Off
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
-
-                {/* Product Info */}
-                <div className="mb-3">
-                  <h3 className="font-semibold text-gray-800 mb-1">
-                    {interaction.product_name}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">{interaction.brand}</p>
-                  <p className="text-lg font-bold text-green-600">
-                    ₹{interaction.price}
-                  </p>
-                  {interaction.discount > 0 && (
-                    <span className="text-sm text-orange-600">
-                      {interaction.discount}% off
-                    </span>
-                  )}
                 </div>
 
-                {/* Interaction Status */}
-                <div className="flex gap-2">
-                  {interaction.isWishlisted === 1 && (
-                    <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
-                      ❤️ Wishlisted
-                    </span>
-                  )}
-                  {interaction.isInCart === 1 && (
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                      🛒 In Cart
-                    </span>
-                  )}
-                </div>
-
-                {/* Interaction Date */}
-                <div className="mt-2 text-xs text-gray-500">
-                  Last updated: {new Date(interaction.updated_at).toLocaleDateString()}
+                {/* Footer Interaction Badges */}
+                <div className="space-y-3 pt-2 border-t border-gray-50">
+                  <div className="flex flex-wrap gap-1.5 text-[9px] font-bold uppercase tracking-wider">
+                    {interaction.isWishlisted === 1 && (
+                      <span className="bg-red-50 text-red-600 px-2 py-1 rounded-md">
+                        ❤️ Saved
+                      </span>
+                    )}
+                    {interaction.isInCart === 1 && (
+                      <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-md">
+                        🛒 Cart
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-gray-455 font-light">
+                    Interacted: {new Date(interaction.updated_at).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Popular Products Section */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-6">Popular Products</h2>
+      <section className="space-y-6 pt-4 border-t border-gray-100">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Popular Products</h2>
+          <p className="text-xs text-gray-500 font-light mt-1">Trending products on the AURA platform based on community user engagement.</p>
+        </div>
+
         {popularProducts.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-600">No popular products data available.</p>
+          <div className="text-center py-16 border border-dashed border-gray-200 rounded-2xl">
+            <p className="text-gray-500 text-sm font-light">No trending dashboard insights currently available.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {popularProducts.map((product) => (
               <div
                 key={product.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between gap-4"
               >
-                {/* Product Image */}
-                {product.main_image && (
-                  <div className="w-full h-32 bg-gray-100 rounded overflow-hidden mb-3">
-                    <img
-                      src={getImageUrl(product.main_image)}
-                      alt={product.product_name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-
-                {/* Product Info */}
-                <div className="mb-3">
-                  <h3 className="font-semibold text-gray-800 mb-1">
-                    {product.product_name}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-2">{product.brand}</p>
-                  <p className="text-lg font-bold text-green-600">
-                    ₹{product.price}
-                  </p>
-                  {product.discount > 0 && (
-                    <span className="text-sm text-orange-600">
-                      {product.discount}% off
-                    </span>
+                <div>
+                  {/* Product Image */}
+                  {product.main_image && (
+                    <div className="aspect-video bg-gray-50 rounded-xl overflow-hidden mb-3 border border-gray-100">
+                      <img
+                        src={getImageUrl(product.main_image)}
+                        alt={product.product_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   )}
+
+                  {/* Product Info */}
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">
+                      {product.product_name}
+                    </h4>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                      {product.brand}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-sm font-black text-gray-950">₹{product.price}</span>
+                      {product.discount > 0 && (
+                        <span className="text-[9px] font-bold text-red-650 bg-red-50 px-2 py-0.5 rounded-md">
+                          -{product.discount}% Off
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Popularity Stats */}
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-gray-50 rounded p-2">
-                    <div className="text-sm font-semibold">{product.interaction_count}</div>
-                    <div className="text-xs text-gray-600">Interactions</div>
+                {/* Popularity Statistics */}
+                <div className="grid grid-cols-3 gap-2 text-center text-[10px] pt-3 border-t border-gray-50">
+                  <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100">
+                    <div className="font-bold text-gray-900">
+                      {product.interaction_count}
+                    </div>
+                    <div className="text-[8px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Views</div>
                   </div>
-                  <div className="bg-red-50 rounded p-2">
-                    <div className="text-sm font-semibold">{product.wishlist_count}</div>
-                    <div className="text-xs text-gray-600">Wishlisted</div>
+                  <div className="bg-red-50/20 rounded-xl p-2 border border-red-50/30">
+                    <div className="font-bold text-red-600">
+                      {product.wishlist_count}
+                    </div>
+                    <div className="text-[8px] text-red-400 font-bold uppercase tracking-wider mt-0.5">Likes</div>
                   </div>
-                  <div className="bg-blue-50 rounded p-2">
-                    <div className="text-sm font-semibold">{product.cart_count}</div>
-                    <div className="text-xs text-gray-600">In Cart</div>
+                  <div className="bg-blue-50/20 rounded-xl p-2 border border-blue-50/30">
+                    <div className="font-bold text-blue-600">
+                      {product.cart_count}
+                    </div>
+                    <div className="text-[8px] text-blue-400 font-bold uppercase tracking-wider mt-0.5">Carts</div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
+
     </div>
   );
 };

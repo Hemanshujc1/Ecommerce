@@ -13,7 +13,9 @@ const LandingPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/landing`);
+        const res = await fetch(`${API_BASE_URL}/landing?t=${Date.now()}`, {
+          cache: "no-store"
+        });
         if (!res.ok) { setLoading(false); return; }
         const data = await res.json();
         const processedCollections = (data.collections || []).map((c) => {
@@ -40,7 +42,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col text-center items-center justify-center gap-6 px-4 sm:px-6 py-10 sm:py-12">
+    <div className="flex flex-col text-center items-center justify-center gap-6 px-4 sm:px-6 py-6 sm:py-8">
       {loading ? (
         <div className="py-16">
           <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
@@ -53,9 +55,13 @@ const LandingPage = () => {
         </div>
       ) : (
         <>
-          <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 px-2">
-            <h1 className="font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-tight">{landing.title}</h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600">{landing.description}</p>
+          <div className="w-full max-w-4xl mx-auto flex flex-col gap-4 px-4 py-6">
+            <h1 className="font-extrabold text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight text-gray-900 bg-gradient-to-r from-gray-900 via-gray-850 to-indigo-955 bg-clip-text text-transparent uppercase">
+              {landing.title}
+            </h1>
+            <p className="text-sm sm:text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+              {landing.description}
+            </p>
           </div>
           <CollectionCard collections={landing.collections || []} className="w-full" />
         </>

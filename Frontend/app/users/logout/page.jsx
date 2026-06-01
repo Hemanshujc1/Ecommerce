@@ -36,7 +36,7 @@ const page = () => {
             height={200}
             src="/images/post-image4.jpg"
             alt="Logout Illustration"
-            className="object-cover w-full h-full"
+            className="object-fit w-full h-full"
           />
         </div>
 

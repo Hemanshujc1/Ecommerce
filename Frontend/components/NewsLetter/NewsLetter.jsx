@@ -28,29 +28,44 @@ const NewsLetter = () => {
   };
 
   return (
-    <div className="bg-violet-400 bg-[url('/images/pattern-bg.png')] bg-contain bg-center py-16 px-4 flex items-center justify-center">
-      <div className="bg-[whitesmoke] bg-opacity-90 rounded-xl p-8 md:p-12 w-full max-w-2xl flex flex-col items-center gap-6 text-center shadow-lg">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Sign Up for our Newsletter</h1>
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+    <div className="bg-gradient-to-r from-slate-900 to-indigo-950 py-16 px-4 flex items-center justify-center relative overflow-hidden w-full">
+      {/* Decorative background glows */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+      
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-12 w-full max-w-2xl flex flex-col items-center gap-6 text-center shadow-2xl relative z-10">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight uppercase">Sign Up for our Newsletter</h2>
+        <p className="text-gray-300 text-sm sm:text-base max-w-md leading-relaxed">
+          Subscribe to get the latest updates, exclusive offers, and early access to new collections.
+        </p>
+        <form onSubmit={handleSubmit} className="w-full flex flex-col sm:flex-row gap-3 mt-2">
           <input
-            type="text" name="name" value={name} required placeholder="Your Name"
+            type="text" 
+            name="name" 
+            value={name} 
+            required 
+            placeholder="Your Name"
             onChange={(e) => setName(e.target.value)}
-            className="border-2 border-black rounded-md bg-white p-3 w-full"
+            className="bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 w-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           />
           <input
-            type="email" name="email" value={email} required placeholder="Your Email Address"
+            type="email" 
+            name="email" 
+            value={email} 
+            required 
+            placeholder="Your Email Address"
             onChange={(e) => setEmail(e.target.value)}
-            className="border-2 border-black rounded-md bg-white p-3 w-full"
+            className="bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 w-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button type="submit" className="border-2 border-black rounded-md bg-white text-black py-3 font-semibold hover:scale-95 hover:bg-yellow-50 transition-all">
+          <button type="submit" className="bg-white text-black font-bold px-8 py-3.5 rounded-xl hover:bg-gray-150 active:scale-98 transition-all shrink-0 uppercase text-xs sm:text-sm tracking-wide">
             SIGN UP
           </button>
         </form>
-        <div className="text-sm text-gray-600 flex flex-col gap-1">
-          <p>Subscribe to get the latest updates and offers.</p>
-          <p>We respect your privacy.{" "}
-            <Link href="/users/UnsubscribeNewsLetter" className="text-blue-500 underline">Unsubscribe</Link> at any time.
+        {error && <p className="text-red-405 text-sm">{error}</p>}
+        <div className="text-xs text-gray-400 mt-2 flex flex-col gap-1">
+          <p>We respect your privacy. No spam, ever.</p>
+          <p>
+            You can <Link href="/users/UnsubscribeNewsLetter" className="text-white underline hover:text-indigo-300 transition-colors">Unsubscribe</Link> at any time.
           </p>
         </div>
       </div>

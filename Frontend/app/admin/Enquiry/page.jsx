@@ -97,7 +97,7 @@ const Page = () => {
     try {
       const url =
         type === "enquiry"
-          ? `${API_BASE_URL}/users/allEnquiry/${id}`
+          ? `${API_BASE_URL}/users/Enquiry/${id}`
           : `${API_BASE_URL}/users/Newsletter/${id}`;
       const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
@@ -119,7 +119,7 @@ const Page = () => {
             ...e,
             source: "Contact Form",
             message: e.message || "-",
-            date: e.submitted_at?.split("T")[0] || "",
+            date: e.created_at?.split("T")[0] || "",
             type: "enquiry",
           })),
           ...newsletters.map((n) => ({
@@ -127,7 +127,7 @@ const Page = () => {
             email: n.email,
             source: "Newsletter",
             message: "Subscribed via newsletter",
-            date: n.subscribed_at?.split("T")[0] || "",
+            date: n.created_at?.split("T")[0] || "",
             id: n.id,
             type: "newsletter",
           })),
@@ -145,7 +145,7 @@ const Page = () => {
           email: n.email,
           message: "Subscribed via newsletter",
           source: "Newsletter",
-          date: n.subscribed_at?.split("T")[0] || "",
+          date: n.created_at?.split("T")[0] || "",
           id: n.id,
           type: "newsletter",
         }));

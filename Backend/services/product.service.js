@@ -15,13 +15,10 @@ const ProductService = {
         brand: parsedData.brand,
         category: parsedData.category,
         main_category: parsedData.main_category,
-        sub_category: parsedData.sub_category,
         short_description: parsedData.short_description,
         sections: parsedData.sections || [],
         variants: (parsedData.variants || []).map(v => ({
           color: v.color,
-          rating: v.rating || 0,
-          rating_count: v.ratingCount || 0,
           price: v.price,
           discount: v.discount || 0,
           features: v.features || {},
@@ -58,7 +55,6 @@ const ProductService = {
           main_image: firstVariant.main_image,
           price: firstVariant.price,
           discount: firstVariant.discount,
-          rating: firstVariant.rating,
           color: firstVariant.color,
           total_stock: (firstVariant.sizes || []).reduce((acc, curr) => acc + (curr.stock || 0), 0)
         };
@@ -85,7 +81,6 @@ const ProductService = {
         brand: productData.brand,
         category: productData.category,
         main_category: productData.main_category,
-        sub_category: productData.sub_category,
         short_description: productData.short_description,
         sections: productData.sections || []
       }, { where: { id: productId }, transaction });
@@ -97,8 +92,6 @@ const ProductService = {
         const variantData = productData.variants.map(v => ({
           product_id: productId,
           color: v.color,
-          rating: v.rating || 0,
-          rating_count: v.ratingCount || 0,
           price: v.price,
           discount: v.discount || 0,
           features: v.features || {},
@@ -177,14 +170,67 @@ const ProductService = {
   },
 
   getUserCart: async (userId) => {
-    return await UserInteraction.findAll({
-      where: { user_id: userId, isInCart: true }
+    const interactions = await UserInteraction.findAll({
+      where: { user_id: userId, isInCart: true },
+      include: [
+        {
+          model: Product,
+          as: 'product',
+          include: [{ model: ProductVariant, as: 'variants' }]
+        }
+      ]
+    });
+
+    return interactions.map(item => {
+      const itemJson = item.toJSON();
+      const product = itemJson.product;
+      let productDetails = {};
+      if (product) {
+        productDetails.product_name = product.product_name;
+        if (product.variants && product.variants.length > 0) {
+          const firstVariant = product.variants[0];
+          productDetails.price = firstVariant.price;
+          productDetails.discount = firstVariant.discount;
+          productDetails.main_image = firstVariant.main_image;
+        }
+      }
+      return {
+        productId: itemJson.product_id,
+        quantity: itemJson.cart_quantity,
+        ...productDetails
+      };
     });
   },
 
   getUserWishlist: async (userId) => {
-    return await UserInteraction.findAll({ 
-      where: { user_id: userId, isWishlisted: true } 
+    const interactions = await UserInteraction.findAll({ 
+      where: { user_id: userId, isWishlisted: true },
+      include: [
+        {
+          model: Product,
+          as: 'product',
+          include: [{ model: ProductVariant, as: 'variants' }]
+        }
+      ]
+    });
+
+    return interactions.map(item => {
+      const itemJson = item.toJSON();
+      const product = itemJson.product;
+      let productDetails = {};
+      if (product) {
+        productDetails.product_name = product.product_name;
+        if (product.variants && product.variants.length > 0) {
+          const firstVariant = product.variants[0];
+          productDetails.price = firstVariant.price;
+          productDetails.discount = firstVariant.discount;
+          productDetails.main_image = firstVariant.main_image;
+        }
+      }
+      return {
+        productId: itemJson.product_id,
+        ...productDetails
+      };
     });
   },
 

@@ -19,11 +19,11 @@ const ImageContainer = () => {
             className="relative w-[16.67%] h-full overflow-hidden"
           >
             <Image
-            width={300}
-            height={200}
+              width={300}
+              height={200}
               src={`/images/${img}`}
               alt={`brandlogo-${index}`}
-              className="object-cover w-full h-full"
+              className="object-fit w-full h-full"
             />
           </div>
         ))}

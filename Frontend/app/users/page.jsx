@@ -1,8 +1,5 @@
 import React from "react";
 import LandingPage from "@/components/LandingPage/LandingPage";
-import ServiceCard from "@/components/ServiceCard/ServiceCard";
-import { LuNotebookPen, LuShoppingBag, LuGift } from "react-icons/lu";
-import { CiDeliveryTruck } from "react-icons/ci";
 import CategoryCard from "@/components/CategoryCard/CategoryCard";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import BlogPost from "@/components/BlogPost/BlogPost";
@@ -14,36 +11,7 @@ const page = () => {
   return (
     <div className="flex flex-col justify-center gap-20 py-16">
       <LandingPage />
-      <div className="flex py-4">
-        <ServiceCard
-          logo={LuNotebookPen}
-          title={"Book An Appointment"}
-          description={
-            "Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-          }
-        ></ServiceCard>
-        <ServiceCard
-          logo={LuShoppingBag}
-          title={"Pick up in store"}
-          description={
-            "Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-          }
-        ></ServiceCard>
-        <ServiceCard
-          logo={LuGift}
-          title={"Special packaging"}
-          description={
-            "Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-          }
-        ></ServiceCard>
-        <ServiceCard
-          logo={CiDeliveryTruck}
-          title={"free global returns"}
-          description={
-            "Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-          }
-        ></ServiceCard>
-      </div>
+
       <div className="flex gap-5 items-center justify-center py-4">
         <CategoryCard
           image={"/images/cat-item1.jpg"}
@@ -70,7 +38,7 @@ const page = () => {
             alt="winter collection"
             width={300}
             height={200}
-            className="object-cover w-full h-full"
+            className="object-fit w-full h-full"
           />
         </div>
         <div className="w-1/2 flex flex-col justify-center px-10">
@@ -109,8 +77,7 @@ const page = () => {
             src={`/images/logo1.png`}
             alt="brandlogo"
             width={300}
-  height={200}
-            
+            height={200}
             className="object-contain w-full h-full rounded-md"
           />
         </div>
@@ -118,9 +85,8 @@ const page = () => {
           <Image
             src={`/images/logo2.png`}
             width={300}
-  height={200}
+            height={200}
             alt="brandlogo"
-            
             className="object-contain w-full h-full rounded-md"
           />
         </div>
@@ -128,9 +94,8 @@ const page = () => {
           <Image
             src={`/images/logo3.png`}
             width={300}
-  height={200}
+            height={200}
             alt="brandlogo"
-            
             className="object-contain w-full h-full rounded-md"
           />
         </div>
@@ -138,9 +103,8 @@ const page = () => {
           <Image
             src={`/images/logo4.png`}
             width={300}
-  height={200}
+            height={200}
             alt="brandlogo"
-            
             className="object-contain w-full h-full rounded-md"
           />
         </div>
@@ -148,9 +112,8 @@ const page = () => {
           <Image
             src={`/images/logo5.png`}
             width={300}
-  height={200}
+            height={200}
             alt="brandlogo"
-            
             className="object-contain w-full h-full rounded-md"
           />
         </div>

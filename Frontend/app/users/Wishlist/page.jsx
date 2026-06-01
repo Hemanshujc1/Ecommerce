@@ -18,7 +18,9 @@ const Page = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_BASE_URL}/home-products`);
+        const res = await fetch(`${API_BASE_URL}/home-products?t=${Date.now()}`, {
+          cache: "no-store"
+        });
         const data = await res.json();
 
         let sections = [];

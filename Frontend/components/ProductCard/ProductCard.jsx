@@ -157,13 +157,33 @@ const ProductCard = ({ title, items }) => {
       : visibleItems;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-10 relative">
+    <div className="px-4 sm:px-6 lg:px-10 relative max-w-7xl mx-auto w-full">
       {/* Header */}
       <div className="flex justify-between items-center text-black mb-6">
-        <div className="text-lg sm:text-xl font-bold">{title}</div>
-        <Link href="/users/Products">
-          <button className="text-sm underline font-semibold hover:scale-110">VIEW ALL</button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <div className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900 uppercase">{title}</div>
+          <Link href="/users/Products">
+            <button className="text-xs text-gray-400 hover:text-black hover:underline font-bold uppercase tracking-widest transition">VIEW ALL</button>
+          </Link>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrev}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-700 hover:bg-black hover:text-white hover:border-black transition-all shadow-sm active:scale-90"
+            aria-label="Previous slide"
+          >
+            ←
+          </button>
+          <button
+            onClick={handleNext}
+            className="w-10 h-10 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-700 hover:bg-black hover:text-white hover:border-black transition-all shadow-sm active:scale-90"
+            aria-label="Next slide"
+          >
+            →
+          </button>
+        </div>
       </div>
 
       {/* Carousel */}
@@ -174,31 +194,44 @@ const ProductCard = ({ title, items }) => {
           const inWishlist = wishlist[productId] || false;
 
           return (
-            <div key={index} className="flex flex-col items-start gap-3 relative bg-white rounded-lg shadow-sm p-2">
-              <div className="relative w-full aspect-square rounded-md hover:scale-95 transition-transform overflow-hidden">
-                {(item?.img || item?.main_image || item?.mainImage || item?.image) && (
-                  <img
-                    src={getImageUrl(item.img || item.main_image || item.mainImage || item.image)}
-                    alt={item.productname || item.product_name || item.name || "Product"}
-                    className="object-contain rounded-md w-full h-full"
-                  />
-                )}
-              </div>
+            <div key={index} className="flex flex-col items-start gap-3 relative bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-4 border border-gray-100 group w-full">
+              <Link href={`/users/Productdisplay/${productId}`} className="w-full">
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden cursor-pointer bg-gray-50 flex items-center justify-center p-2">
+                  {(item?.img || item?.main_image || item?.mainImage || item?.image) && (
+                    <img
+                      src={getImageUrl(item.img || item.main_image || item.mainImage || item.image)}
+                      alt={item.productname || item.product_name || item.name || "Product"}
+                      className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
+                </div>
+              </Link>
 
-              <div className="text-black text-left flex flex-col gap-1 w-full">
-                <h3 className="text-sm sm:text-base font-semibold uppercase line-clamp-2">
-                  {item.productname || item.product_name || item.name || "Product"}
-                </h3>
-                <p className="text-sm">{item.price}</p>
+              <div className="text-black text-left flex flex-col gap-1 w-full mt-2">
+                <Link href={`/users/Productdisplay/${productId}`}>
+                  <h3 className="text-sm sm:text-base font-bold text-gray-800 uppercase line-clamp-1 hover:text-blue-600 transition-colors cursor-pointer">
+                    {item.productname || item.product_name || item.name || "Product"}
+                  </h3>
+                </Link>
+                 <div className="flex items-center gap-2 mt-1">
+                  <span className="text-red-600 font-extrabold text-base sm:text-lg">
+                    {typeof item.price === "string" ? item.price : `₹${item.price}`}
+                  </span>
+                  {item.discount > 0 && (
+                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                      -{Math.round(item.discount)}%
+                    </span>
+                  )}
+                </div>
 
                 {quantity > 0 ? (
-                  <div className="flex items-center gap-2 mt-2">
-                    <button onClick={() => handleRemoveFromCart(productId)} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-black font-bold">-</button>
-                    <span className="font-semibold">{quantity}</span>
-                    <button onClick={() => handleIncreaseQuantity(productId)} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 text-black font-bold">+</button>
+                  <div className="flex items-center justify-between gap-2 mt-3 bg-gray-50 rounded-xl p-1 border w-full">
+                    <button onClick={() => handleRemoveFromCart(productId)} className="w-8 h-8 flex items-center justify-center bg-white border rounded-lg hover:bg-gray-100 text-black font-bold transition">-</button>
+                    <span className="font-semibold text-sm">{quantity}</span>
+                    <button onClick={() => handleIncreaseQuantity(productId)} className="w-8 h-8 flex items-center justify-center bg-white border rounded-lg hover:bg-gray-100 text-black font-bold transition">+</button>
                   </div>
                 ) : (
-                  <button onClick={() => handleAddToCart(productId)} className="mt-2 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition uppercase text-xs sm:text-sm tracking-wide w-full">
+                  <button onClick={() => handleAddToCart(productId)} className="mt-3 bg-black text-white py-2.5 rounded-xl hover:bg-gray-800 transition uppercase text-xs font-bold tracking-wider w-full active:scale-[0.98] shadow-sm">
                     Add to Cart
                   </button>
                 )}
@@ -206,28 +239,14 @@ const ProductCard = ({ title, items }) => {
 
               <button
                 onClick={() => toggleWishlist(productId)}
-                className={`absolute top-3 right-3 p-2 rounded-full transition ${inWishlist ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/80 text-black hover:bg-gray-200'}`}
+                className={`absolute top-6 right-6 p-2 rounded-full shadow-sm transition ${inWishlist ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/90 text-gray-600 hover:text-black hover:bg-white'}`}
               >
-                {inWishlist ? <FaHeart className="text-lg" /> : <FiHeart className="text-lg" />}
+                {inWishlist ? <FaHeart className="text-base" /> : <FiHeart className="text-base" />}
               </button>
             </div>
           );
         })}
       </div>
-
-      {/* Navigation Buttons */}
-      <button
-        onClick={handlePrev}
-        className="absolute top-1/2 left-0 transform -translate-y-1/2 p-2 rounded-full z-10"
-      >
-        <FaRegArrowAltCircleLeft className="text-5xl text-black hover:text-blue-600" />
-      </button>
-      <button
-        onClick={handleNext}
-        className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 rounded-full z-10"
-      >
-        <FaRegArrowAltCircleRight className="text-5xl text-black hover:text-blue-600" />
-      </button>
     </div>
   );
 };

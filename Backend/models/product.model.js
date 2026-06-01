@@ -14,7 +14,6 @@ const Product = sequelize.define("Product", {
   brand: DataTypes.STRING,
   category: DataTypes.STRING,
   main_category: DataTypes.STRING,
-  sub_category: DataTypes.STRING,
   short_description: DataTypes.TEXT,
   sections: {
     type: DataTypes.JSON,
@@ -38,14 +37,6 @@ const ProductVariant = sequelize.define("ProductVariant", {
     allowNull: false
   },
   color: DataTypes.STRING,
-  rating: {
-    type: DataTypes.DECIMAL(2, 1),
-    defaultValue: 0
-  },
-  rating_count: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
   price: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false

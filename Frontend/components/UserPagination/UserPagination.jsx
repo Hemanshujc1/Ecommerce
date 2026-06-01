@@ -82,8 +82,8 @@ const UserPagination = ({
                 onClick={() => onPageChange(page)}
                 className={`h-10 w-10 flex items-center justify-center text-sm font-bold rounded-lg transition-all active:scale-95 shadow-sm ${
                   isCurrentPage
-                    ? 'bg-red-600 text-white border-none'
-                    : `bg-white text-gray-600 border border-gray-200 hover:border-red-600 hover:text-red-600 ${shouldHideOnMobile ? 'hidden sm:flex' : 'flex'}`
+                    ? 'bg-black text-white border-none'
+                    : `bg-white text-gray-600 border border-gray-200 hover:border-black hover:text-black ${shouldHideOnMobile ? 'hidden sm:flex' : 'flex'}`
                 }`}
               >
                 {page}

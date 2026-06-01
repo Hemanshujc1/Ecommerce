@@ -52,12 +52,7 @@ const Page = () => {
           >
             {user.is_blocked ? "Unblock" : "Block"}
           </button>
-          <button
-            onClick={() => sendNotification(user)}
-            className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
-          >
-            Send Email
-          </button>
+          
         </div>
       ),
     },
@@ -131,17 +126,7 @@ const Page = () => {
     }
   };
 
-  const sendNotification = async (user) => {
-    try {
-      await axios.post(`${API_BASE_URL}/users/send-discount`, {
-        email: user.email,
-      });
-      alert(`Discount email sent to ${user.email}`);
-    } catch (err) {
-      console.error("Failed to send email:", err);
-      alert("Failed to send email.");
-    }
-  };
+
 
   // Pagination logic
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);

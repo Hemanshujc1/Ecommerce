@@ -1,14 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import {
-  addToCart,
-  removeFromWishlist,
-  getUserWishlist,
-} from "../../lib/api";
+import { addToCart, removeFromWishlist, getUserWishlist } from "../../lib/api";
 import { getUserId, isAuthenticated } from "../../lib/auth";
 import { getImageUrl } from "../../lib/image.helper";
 import toast from "react-hot-toast";
+import { IoCartOutline, IoTrashOutline, IoBagCheckOutline } from "react-icons/io5";
 
 const WishlistCard = ({ onWishlistUpdate }) => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -37,12 +34,13 @@ const WishlistCard = ({ onWishlistUpdate }) => {
       setLoading(false);
     }
   };
+
   const handleAddToCart = async (productId) => {
     if (!isAuthenticated()) {
       toast.error("Please login to add items to cart");
       return;
     }
-    
+
     const userId = getUserId();
     const quantity = 1;
     try {
@@ -60,12 +58,14 @@ const WishlistCard = ({ onWishlistUpdate }) => {
       toast.error("Please login to manage wishlist");
       return;
     }
-    
+
     const userId = getUserId();
     try {
       const response = await removeFromWishlist(userId, productId);
       if (response.success) {
-        setWishlistItems(prev => prev.filter(item => item.productId !== productId));
+        setWishlistItems((prev) =>
+          prev.filter((item) => item.productId !== productId),
+        );
         toast.success("Removed from wishlist!");
         if (onWishlistUpdate) onWishlistUpdate();
       }
@@ -75,17 +75,17 @@ const WishlistCard = ({ onWishlistUpdate }) => {
   };
 
   const handleBuyNow = (productId) => {
-    // Add to cart first, then redirect to checkout
     handleAddToCart(productId);
     setTimeout(() => {
-      window.location.href = '/users/Cart';
+      window.location.href = "/users/Cart";
     }, 1000);
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading wishlist...</div>
+      <div className="flex flex-col justify-center items-center h-64 space-y-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+        <p className="text-sm text-gray-500 font-light">Loading wishlist...</p>
       </div>
     );
   }
@@ -93,75 +93,78 @@ const WishlistCard = ({ onWishlistUpdate }) => {
   if (!isAuthenticated()) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-600 text-lg">Please login to view your wishlist</p>
+        <p className="text-gray-500 text-base font-light">Please login to view your wishlist</p>
       </div>
     );
   }
 
   return (
-    <div className="px-4 md:px-10">
+    <div>
       {wishlistItems.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-gray-600 text-lg">Your wishlist is empty</p>
-          <p className="text-gray-500 mt-2">Add some products you love!</p>
+        <div className="text-center py-16 border border-dashed border-gray-200 rounded-2xl">
+          <p className="text-gray-500 text-lg font-light">Your wishlist is empty</p>
+          <p className="text-xs text-gray-400 mt-1">Add some products you love to get started!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {wishlistItems.map((item) => {
             const imageUrl = getImageUrl(item.main_image);
 
             return (
               <div
                 key={item.productId}
-                className="bg-white text-black rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300 flex flex-col group"
               >
-                <div className="relative w-full h-[250px]">
+                {/* Product Image Area */}
+                <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
                   <Image
                     width={300}
-                    height={250}
+                    height={300}
                     src={imageUrl}
                     alt={item.product_name || "Product"}
-                    className="object-cover w-full h-full"
+                    className="object-cover w-full h-full group-hover:scale-105 transition duration-500"
                   />
+                  {item.discount > 0 && (
+                    <span className="absolute top-3 left-3 text-[10px] font-bold text-white bg-red-600 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                      -{item.discount}% Off
+                    </span>
+                  )}
                 </div>
-                <div className="p-4 flex flex-col gap-3">
-                  <h2 className="text-lg font-semibold text-gray-800 line-clamp-2">
-                    {item.product_name}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xl font-bold text-gray-900">
+
+                {/* Details Section */}
+                <div className="p-5 flex flex-col flex-1 justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <h3 className="text-sm font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-black transition">
+                      {item.product_name}
+                    </h3>
+                    <p className="text-base font-black text-gray-900">
                       ₹{item.price}
                     </p>
-                    {item.discount && (
-                      <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded">
-                        {item.discount}% off
-                      </span>
-                    )}
                   </div>
-                  {item.rating && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-yellow-500">⭐</span>
-                      <span className="text-sm text-gray-600">{item.rating}/5</span>
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-2 mt-2">
-                    <button 
+
+                  {/* Actions Row */}
+                  <div className="space-y-2 mt-auto pt-2">
+                    <button
                       onClick={() => handleAddToCart(item.productId)}
-                      className="w-full bg-black text-white px-4 py-2 text-sm uppercase rounded hover:bg-gray-800 transition font-semibold"
+                      className="w-full inline-flex items-center justify-center gap-2 bg-black text-white px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-gray-800 transition active:scale-[0.98] shadow-sm"
                     >
+                      <IoCartOutline className="text-base" />
                       Add to Cart
                     </button>
+
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         onClick={() => handleBuyNow(item.productId)}
-                        className="flex-1 bg-blue-600 text-white px-4 py-2 text-sm uppercase rounded hover:bg-blue-700 transition font-semibold"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-100 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-xl transition active:scale-[0.98]"
                       >
+                        <IoBagCheckOutline className="text-sm" />
                         Buy Now
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleRemoveFromWishlist(item.productId)}
-                        className="flex-1 bg-red-600 text-white px-4 py-2 text-sm uppercase rounded hover:bg-red-700 transition font-semibold"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider rounded-xl transition active:scale-[0.98]"
                       >
+                        <IoTrashOutline className="text-sm" />
                         Remove
                       </button>
                     </div>

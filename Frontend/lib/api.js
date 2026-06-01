@@ -3,7 +3,7 @@ import { API_BASE_URL } from "./api.config";
 
 export const fetchSocialLinks = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/social-links`);
+      const res = await fetch(`${API_BASE_URL}/social-links`, { cache: "no-store" });
       if (!res.ok) {
         throw new Error("Failed to fetch social links");
       }

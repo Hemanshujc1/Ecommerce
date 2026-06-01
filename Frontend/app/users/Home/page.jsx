@@ -2,10 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import LandingPage from "@/components/LandingPage/LandingPage";
-import ServiceCard from "@/components/ServiceCard/ServiceCard";
-import { LuNotebookPen, LuShoppingBag, LuGift } from "react-icons/lu";
 import { API_BASE_URL } from "@/lib/api.config";
-import { CiDeliveryTruck } from "react-icons/ci";
 import ProductCard from "@/components/ProductCard/ProductCard";
 import BlogPost from "@/components/BlogPost/BlogPost";
 import NewsLetter from "@/components/NewsLetter/NewsLetter";
@@ -22,7 +19,9 @@ const Page = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_BASE_URL}/home-products`);
+        const res = await fetch(`${API_BASE_URL}/home-products?t=${Date.now()}`, {
+          cache: "no-store"
+        });
         const data = await res.json();
 
         // Handle different response formats
@@ -56,31 +55,6 @@ const Page = () => {
   return (
     <div className="flex flex-col justify-center gap-12">
       <LandingPage  />
-
-      {/* Services */}
-      <div className="flex flex-wrap gap-4 justify-center py-4">
-        <ServiceCard
-          logo={LuNotebookPen}
-          title="Book An Appointment"
-          description="Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-        />
-        <ServiceCard
-          logo={LuShoppingBag}
-          title="Pick up in store"
-          description="Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-        />
-        <ServiceCard
-          logo={LuGift}
-          title="Special packaging"
-          description="Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-        />
-        <ServiceCard
-          logo={CiDeliveryTruck}
-          title="Free global returns"
-          description="Lorem ipsum, dolor sit amet consectetur adipisicing elit."
-        />
-      </div>
-
      
 
       {/* Dynamic Product Sections from Admin Panel */}
@@ -109,32 +83,35 @@ const Page = () => {
             
             {/* Add promotional banner after the first section */}
             {idx === 0 && (
-              <section className="bg-[whitesmoke] text-black w-full max-w-6xl mx-auto px-4 rounded-xl overflow-hidden shadow-md flex flex-col md:flex-row h-auto md:h-[70vh] my-12">
+              <section className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white w-full max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-xl flex flex-col md:flex-row h-auto md:h-[60vh] my-16 relative border border-white/5">
+                <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
+                
                 {/* Image */}
-                <div className="relative w-full md:w-1/2 h-[300px] md:h-full">
+                <div className="relative w-full md:w-1/2 h-[300px] md:h-full overflow-hidden bg-gray-900">
                   <Image
                     src="/images/single-image-2.jpg"
                     alt="Winter Collection"
-                    layout="fill"
-                    objectFit="cover"
-                    className="rounded-t-xl md:rounded-l-xl md:rounded-tr-none"
+                    fill
+                    className="object-cover rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none transition-transform duration-700 hover:scale-105"
                     priority
                   />
                 </div>
 
-                <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-10 gap-6">
+                <div className="w-full md:w-1/2 flex flex-col justify-center px-8 md:px-12 py-10 md:py-0 gap-6 relative z-10">
                   <div>
-                    <h2 className="text-3xl md:text-4xl font-extrabold uppercase tracking-wide mb-2">
+                    <span className="text-xs uppercase tracking-widest text-indigo-400 font-bold mb-2 block">New Season</span>
+                    <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight mb-4 leading-tight">
                       Classic Winter Collection
                     </h2>
-                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                    <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                       Discover timeless winter styles crafted for comfort and elegance.
                       Embrace the cold with fashion-forward warmth that blends tradition
                       with modern design.
                     </p>
                   </div>
                   <Link href="/users/Products">
-                    <button className="bg-black text-white px-6 py-2 w-fit text-sm uppercase tracking-wide rounded-md hover:bg-gray-800 hover:scale-105 transition">
+                    <button className="bg-white text-black px-8 py-3.5 w-fit text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-gray-100 hover:scale-105 active:scale-98 transition-all duration-300 shadow-lg">
                       Shop Collection
                     </button>
                   </Link>

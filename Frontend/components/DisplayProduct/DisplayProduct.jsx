@@ -402,7 +402,7 @@ const DisplayProduct = () => {
         filteredProducts={filteredProducts.length}
       />
 
-      <div className="px-4 sm:px-6 lg:px-10">
+      <div className="px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
         {products.length === 0 ? (
           <div className="text-center text-gray-600 mt-10">
             No products available.
@@ -421,7 +421,7 @@ const DisplayProduct = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               {currentProducts.map((product) => {
                 const id = product.id || product._id;
                 const quantity = cartQuantities[id] || 0;
@@ -434,10 +434,10 @@ const DisplayProduct = () => {
                 return (
                   <div
                     key={id}
-                    className="flex flex-col bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden"
+                    className="flex flex-col bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden relative"
                   >
                     <Link href={`/users/Productdisplay/${id}`} className="block relative">
-                      <div className="relative w-full aspect-square overflow-hidden bg-gray-50">
+                      <div className="relative w-full aspect-square overflow-hidden bg-gray-50 flex items-center justify-center p-4">
                         <Image
                           fill
                           src={imageUrl}
@@ -447,39 +447,34 @@ const DisplayProduct = () => {
                         />
                       </div>
                       {product.discount > 0 && (
-                        <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-                          -{product.discount}%
+                        <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider shadow-sm z-10">
+                          -{Math.round(product.discount)}%
                         </div>
                       )}
                     </Link>
                     
-                    <div className="p-4 flex flex-col flex-grow gap-2 text-black">
+                    <div className="p-5 flex flex-col flex-grow gap-2 text-black mt-1">
                       <div className="min-h-[3rem]">
                         <Link href={`/users/Productdisplay/${id}`}>
-                          <h2 className="text-sm font-bold text-gray-800 hover:text-red-600 transition-colors leading-tight line-clamp-2">
+                          <h2 className="text-sm sm:text-base font-bold text-gray-800 hover:text-blue-600 transition-colors leading-tight line-clamp-2">
                             {product.product_name || product.name || "Product"}
                           </h2>
                         </Link>
-                        <p className="text-xs text-gray-500 mt-1 uppercase tracking-tighter">
-                          {product.brand || "Electronic"}
+                        <p className="text-xs text-gray-400 mt-1.5 uppercase tracking-wider font-semibold">
+                          {product.brand || "Brand"}
                         </p>
                       </div>
 
                       <div className="flex items-baseline gap-2 mt-auto">
-                        <span className="text-lg font-bold text-red-600">
+                        <span className="text-lg sm:text-xl font-extrabold text-red-600">
                           ₹{product.price}
                         </span>
-                        {product.rating && (
-                          <span className="text-[10px] flex items-center bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-100 font-medium ml-auto">
-                            ⭐ {product.rating}
-                          </span>
-                        )}
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-gray-50">
+                      <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-100">
                         {quantity > 0 ? (
-                          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-1 border">
+                          <div className="flex items-center justify-between bg-gray-50 rounded-xl p-1 border">
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={() => handleDecreaseQuantity(id)}
@@ -487,7 +482,7 @@ const DisplayProduct = () => {
                               >
                                 -
                               </button>
-                              <span className="w-8 text-center text-sm font-bold">
+                              <span className="w-8 text-center text-sm font-bold text-gray-800">
                                 {quantity}
                               </span>
                               <button
@@ -500,16 +495,16 @@ const DisplayProduct = () => {
                             </div>
                             <button
                               onClick={() => handleRemoveFromCart(id)}
-                              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-600 transition"
+                              className="px-3 py-1 bg-white hover:bg-red-50 text-red-600 border rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm"
                               title="Remove"
                             >
-                              🗑️
+                              Remove
                             </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => handleAddToCart(id)}
-                            className="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-all font-bold text-xs uppercase tracking-wider active:scale-[0.98]"
+                            className="w-full bg-black text-white py-2.5 rounded-xl hover:bg-gray-800 transition-all font-bold text-xs uppercase tracking-wider active:scale-[0.98] shadow-sm"
                           >
                             Add to Cart
                           </button>
@@ -517,10 +512,10 @@ const DisplayProduct = () => {
 
                         <button
                           onClick={() => toggleWishlist(id)}
-                          className={`w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                          className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
                             inWishlist
                               ? "bg-red-50 text-red-600 border-red-200"
-                              : "bg-white text-gray-900 border-gray-200 hover:bg-gray-50"
+                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                           }`}
                         >
                           {inWishlist ? "❤️ Saved" : "♡ Save to Wishlist"}

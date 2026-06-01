@@ -1,17 +1,23 @@
 import React from "react";
 import Image from "next/image";
 
-const Productdescription = ({ img, productname, productprice, productintro, productdetails }) => {
+const Productdescription = ({
+  img,
+  productname,
+  productprice,
+  productintro,
+  productdetails,
+}) => {
   return (
     <div>
       <div className="flex flex-col item-center md:flex-row gap-10 py-10 px-8">
         <div className="relative w-full md:w-1/2 h-[70vh]">
           <Image
-          width={300}
-          height={200}
+            width={300}
+            height={200}
             src={`/images/${img}`}
             alt="Product"
-            className="object-cover w-full h-full rounded-md hover:scale-95 transition"
+            className="object-fit w-full h-full rounded-md hover:scale-95 transition"
           />
         </div>
         <div className="md:w-1/2 flex flex-col justify-center gap-4 text-black">

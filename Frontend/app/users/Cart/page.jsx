@@ -17,7 +17,9 @@ const Page = () => {
   useEffect(() => {
     const fetchProductSections = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/home-products`);
+        const res = await fetch(`${API_BASE_URL}/home-products?t=${Date.now()}`, {
+          cache: "no-store"
+        });
         const data = await res.json();
 
         const transformed = (data.sections || []).map((section) => ({
@@ -47,7 +49,7 @@ const Page = () => {
       const userId = getUserId();
       const response = await getUserCart(userId);
       if (response && response.success) {
-        setCartItems(response.cart || []);
+        setCartItems(response.data || []);
       }
     } catch (error) {
       console.error("Error loading cart:", error);

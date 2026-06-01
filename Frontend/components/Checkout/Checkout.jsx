@@ -18,7 +18,7 @@ const Checkout = () => {
     city: "",
     state: "",
     postalCode: "",
-    country: "India"
+    country: "India",
   });
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [orderTotals, setOrderTotals] = useState({
@@ -26,7 +26,7 @@ const Checkout = () => {
     discount: 0,
     shipping: 0,
     tax: 0,
-    total: 0
+    total: 0,
   });
 
   const router = useRouter();
@@ -60,17 +60,24 @@ const Checkout = () => {
 
   const calculateTotals = () => {
     if (!cartItems || cartItems.length === 0) {
-      setOrderTotals({ subtotal: 0, discount: 0, shipping: 0, tax: 0, total: 0 });
+      setOrderTotals({
+        subtotal: 0,
+        discount: 0,
+        shipping: 0,
+        tax: 0,
+        total: 0,
+      });
       return;
     }
 
     const subtotal = cartItems.reduce((sum, item) => {
-      return sum + (item.price * item.quantity);
+      return sum + item.price * item.quantity;
     }, 0);
 
     const discount = cartItems.reduce((sum, item) => {
       if (item.discount) {
-        const discountAmount = (item.price * item.quantity * item.discount) / 100;
+        const discountAmount =
+          (item.price * item.quantity * item.discount) / 100;
         return sum + discountAmount;
       }
       return sum;
@@ -85,20 +92,26 @@ const Checkout = () => {
       discount: discount,
       shipping: shipping,
       tax: tax,
-      total: total
+      total: total,
     });
   };
 
   const handleAddressChange = (field, value) => {
-    setShippingAddress(prev => ({
+    setShippingAddress((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const validateForm = () => {
-    if (!shippingAddress.name || !shippingAddress.phone || !shippingAddress.addressLine1 || 
-        !shippingAddress.city || !shippingAddress.state || !shippingAddress.postalCode) {
+    if (
+      !shippingAddress.name ||
+      !shippingAddress.phone ||
+      !shippingAddress.addressLine1 ||
+      !shippingAddress.city ||
+      !shippingAddress.state ||
+      !shippingAddress.postalCode
+    ) {
       toast.error("Please fill in all required address fields");
       return false;
     }
@@ -117,19 +130,19 @@ const Checkout = () => {
     setOrderLoading(true);
     try {
       const userId = getUserId();
-      
+
       // Prepare order data
       const orderData = {
         userId: userId,
-        items: cartItems.map(item => ({
+        items: cartItems.map((item) => ({
           productId: item.productId,
           productName: item.product_name,
           productImage: item.main_image,
           quantity: item.quantity,
           unitPrice: item.price,
           totalPrice: item.price * item.quantity,
-          size: item.size || '',
-          color: item.color || ''
+          size: item.size || "",
+          color: item.color || "",
         })),
         totalAmount: orderTotals.subtotal,
         discountAmount: orderTotals.discount,
@@ -141,17 +154,19 @@ const Checkout = () => {
         billingAddress: shippingAddress,
         phone: shippingAddress.phone,
         email: "user@example.com", // You might want to get this from user profile
-        notes: ""
+        notes: "",
       };
 
       const response = await createOrder(orderData);
 
       if (response.success) {
         toast.success("Order placed successfully!");
-        
+
         // Simulate payment processing
         setTimeout(() => {
-          router.push(`/users/Account?tab=orders&orderId=${response.data.orderId}`);
+          router.push(
+            `/users/Account?tab=orders&orderId=${response.data.orderId}`,
+          );
         }, 2000);
       } else {
         toast.error(response.error || "Failed to place order");
@@ -167,7 +182,9 @@ const Checkout = () => {
   if (!isAuthenticated()) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-600 text-lg">Please login to proceed with checkout</p>
+        <p className="text-gray-600 text-lg">
+          Please login to proceed with checkout
+        </p>
       </div>
     );
   }
@@ -185,8 +202,8 @@ const Checkout = () => {
     return (
       <div className="text-center py-16">
         <p className="text-gray-600 text-lg">Your cart is empty</p>
-        <button 
-          onClick={() => router.push('/users/Products')}
+        <button
+          onClick={() => router.push("/users/Products")}
           className="mt-4 bg-black text-white px-6 py-2 rounded hover:bg-gray-800"
         >
           Continue Shopping
@@ -209,7 +226,7 @@ const Checkout = () => {
                 type="text"
                 placeholder="Full Name *"
                 value={shippingAddress.name}
-                onChange={(e) => handleAddressChange('name', e.target.value)}
+                onChange={(e) => handleAddressChange("name", e.target.value)}
                 className="p-3 border rounded-md"
                 required
               />
@@ -217,7 +234,7 @@ const Checkout = () => {
                 type="tel"
                 placeholder="Phone Number *"
                 value={shippingAddress.phone}
-                onChange={(e) => handleAddressChange('phone', e.target.value)}
+                onChange={(e) => handleAddressChange("phone", e.target.value)}
                 className="p-3 border rounded-md"
                 required
               />
@@ -225,7 +242,9 @@ const Checkout = () => {
                 type="text"
                 placeholder="Address Line 1 *"
                 value={shippingAddress.addressLine1}
-                onChange={(e) => handleAddressChange('addressLine1', e.target.value)}
+                onChange={(e) =>
+                  handleAddressChange("addressLine1", e.target.value)
+                }
                 className="p-3 border rounded-md md:col-span-2"
                 required
               />
@@ -233,14 +252,16 @@ const Checkout = () => {
                 type="text"
                 placeholder="Address Line 2"
                 value={shippingAddress.addressLine2}
-                onChange={(e) => handleAddressChange('addressLine2', e.target.value)}
+                onChange={(e) =>
+                  handleAddressChange("addressLine2", e.target.value)
+                }
                 className="p-3 border rounded-md md:col-span-2"
               />
               <input
                 type="text"
                 placeholder="City *"
                 value={shippingAddress.city}
-                onChange={(e) => handleAddressChange('city', e.target.value)}
+                onChange={(e) => handleAddressChange("city", e.target.value)}
                 className="p-3 border rounded-md"
                 required
               />
@@ -248,7 +269,7 @@ const Checkout = () => {
                 type="text"
                 placeholder="State *"
                 value={shippingAddress.state}
-                onChange={(e) => handleAddressChange('state', e.target.value)}
+                onChange={(e) => handleAddressChange("state", e.target.value)}
                 className="p-3 border rounded-md"
                 required
               />
@@ -256,7 +277,9 @@ const Checkout = () => {
                 type="text"
                 placeholder="Postal Code *"
                 value={shippingAddress.postalCode}
-                onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                onChange={(e) =>
+                  handleAddressChange("postalCode", e.target.value)
+                }
                 className="p-3 border rounded-md"
                 required
               />
@@ -264,7 +287,7 @@ const Checkout = () => {
                 type="text"
                 placeholder="Country"
                 value={shippingAddress.country}
-                onChange={(e) => handleAddressChange('country', e.target.value)}
+                onChange={(e) => handleAddressChange("country", e.target.value)}
                 className="p-3 border rounded-md"
               />
             </div>
@@ -325,22 +348,27 @@ const Checkout = () => {
         {/* Right Column - Order Summary */}
         <div className="bg-white p-6 rounded-lg border h-fit sticky top-4">
           <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-          
+
           {/* Cart Items */}
           <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
             {cartItems.map((item) => (
-              <div key={item.productId} className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+              <div
+                key={item.productId}
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded"
+              >
                 <img
                   src={getImageUrl(item.main_image)}
                   alt={item.product_name}
-                  className="w-12 h-12 object-cover rounded"
+                  className="w-12 h-12 object-fit rounded"
                 />
                 <div className="flex-1">
                   <h4 className="font-medium text-sm">{item.product_name}</h4>
                   <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="font-semibold">
+                    ₹{(item.price * item.quantity).toFixed(2)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -360,7 +388,11 @@ const Checkout = () => {
             )}
             <div className="flex justify-between">
               <span>Shipping</span>
-              <span>{orderTotals.shipping === 0 ? 'FREE' : `₹${orderTotals.shipping.toFixed(2)}`}</span>
+              <span>
+                {orderTotals.shipping === 0
+                  ? "FREE"
+                  : `₹${orderTotals.shipping.toFixed(2)}`}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Tax (GST 18%)</span>
@@ -378,13 +410,23 @@ const Checkout = () => {
             disabled={orderLoading}
             className="w-full bg-black text-white py-3 px-4 rounded-md hover:bg-gray-800 transition font-semibold mt-6 disabled:opacity-50"
           >
-            {orderLoading ? "Placing Order..." : `Place Order - ₹${orderTotals.total.toFixed(2)}`}
+            {orderLoading
+              ? "Placing Order..."
+              : `Place Order - ₹${orderTotals.total.toFixed(2)}`}
           </button>
 
           {/* Security Badge */}
           <div className="mt-4 flex items-center justify-center text-sm text-gray-500">
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                clipRule="evenodd"
+              />
             </svg>
             Secure Checkout
           </div>

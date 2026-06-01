@@ -81,7 +81,7 @@ const ProductDisplayPage = () => {
           colorOptions: [...new Set(prod.variants?.map((v) => v.color))],
           sizeOptions: [
             ...new Set(
-              prod.variants?.flatMap((v) => v.sizes?.map((s) => s.size))
+              prod.variants?.flatMap((v) => v.sizes?.map((s) => s.size)),
             ),
           ],
           allVariants: prod.variants || [],
@@ -123,9 +123,11 @@ const ProductDisplayPage = () => {
       ...product,
       originalPrice: currentVariant.price || 0,
       discountPercent: currentVariant.discount || 0,
-      rating: currentVariant.rating || 0,
-      ratingsCount: currentVariant.rating_count || 0,
-      image: getImageUrl(currentVariant.main_image || currentVariant.mainImage || currentVariant.image),
+      image: getImageUrl(
+        currentVariant.main_image ||
+          currentVariant.mainImage ||
+          currentVariant.image,
+      ),
       relatedImages: getRelatedImages(currentVariant),
       features: currentVariant.features || "",
     };
@@ -172,7 +174,12 @@ const ProductDisplayPage = () => {
   useEffect(() => {
     const fetchRelatedSections = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/home-products`);
+        const res = await fetch(
+          `${API_BASE_URL}/home-products?t=${Date.now()}`,
+          {
+            cache: "no-store",
+          },
+        );
         const data = await res.json();
 
         const transformed = (data.sections || []).map((section) => ({
@@ -205,12 +212,12 @@ const ProductDisplayPage = () => {
     if (!product || !selectedColor || !selectedSize) return 0;
 
     const currentVariant = product.allVariants.find(
-      (v) => v.color === selectedColor
+      (v) => v.color === selectedColor,
     );
     if (!currentVariant || !currentVariant.sizes) return 0;
 
     const currentSizeData = currentVariant.sizes.find(
-      (s) => s.size === selectedSize
+      (s) => s.size === selectedSize,
     );
     return currentSizeData ? currentSizeData.stock : 0;
   };
@@ -220,7 +227,7 @@ const ProductDisplayPage = () => {
     if (!product || !selectedColor) return [];
 
     const currentVariant = product.allVariants.find(
-      (v) => v.color === selectedColor
+      (v) => v.color === selectedColor,
     );
     return currentVariant?.sizes?.map((s) => s.size) || [];
   };
@@ -310,7 +317,7 @@ const ProductDisplayPage = () => {
       const res = await updateCartQuantity(
         userId,
         product.id,
-        currentQuantity - 1
+        currentQuantity - 1,
       );
       if (res.success) {
         setCartQuantities((prev) => ({
@@ -367,7 +374,7 @@ const ProductDisplayPage = () => {
       const final = calculateFinalPrice(
         displayProduct.originalPrice,
         displayProduct.discountPercent,
-        couponDiscount
+        couponDiscount,
       );
       setFinalPrice(final);
     }
@@ -396,7 +403,10 @@ const ProductDisplayPage = () => {
       <nav className="text-xs sm:text-sm mb-4 sm:mb-6 overflow-hidden">
         <ul className="flex flex-wrap items-center gap-1 text-gray-500">
           <li>
-            <a href="/users/Products" className="hover:text-red-600 transition-colors whitespace-nowrap">
+            <a
+              href="/users/Products"
+              className="hover:text-red-600 transition-colors whitespace-nowrap"
+            >
               Products
             </a>
           </li>
@@ -418,7 +428,7 @@ const ProductDisplayPage = () => {
           {product.allVariants &&
             product.allVariants.some(
               (v) =>
-                v.color === selectedColor && v.videos && v.videos.length > 0
+                v.color === selectedColor && v.videos && v.videos.length > 0,
             ) && (
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-3">🎥 Product Videos</h3>
@@ -469,10 +479,12 @@ const ProductDisplayPage = () => {
           {/* Features */}
           {displayProduct.features && (
             <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4 text-black">Features</h3>
+              <h3 className="text-lg font-semibold mb-4 text-black">
+                Features
+              </h3>
               <p className="text-gray-600 leading-relaxed">
-                {typeof displayProduct.features === 'string' 
-                  ? displayProduct.features 
+                {typeof displayProduct.features === "string"
+                  ? displayProduct.features
                   : JSON.stringify(displayProduct.features)}
               </p>
             </div>
@@ -506,7 +518,9 @@ const ProductDisplayPage = () => {
                     <div className="flex justify-between">
                       <span>
                         Product Discount (
-                        {(parseFloat(displayProduct.discountPercent) || 0).toFixed(1)}
+                        {(
+                          parseFloat(displayProduct.discountPercent) || 0
+                        ).toFixed(1)}
                         %):
                       </span>
                       <span className="text-green-600 font-medium">
@@ -531,7 +545,8 @@ const ProductDisplayPage = () => {
                         {(
                           (((parseFloat(displayProduct.originalPrice) || 0) -
                             ((parseFloat(displayProduct.originalPrice) || 0) *
-                              (parseFloat(displayProduct.discountPercent) || 0)) /
+                              (parseFloat(displayProduct.discountPercent) ||
+                                0)) /
                               100) *
                             (parseFloat(selectedCoupon.discount) || 0)) /
                           100
@@ -704,8 +719,8 @@ const ProductDisplayPage = () => {
                       selectedSize === size
                         ? "bg-black text-white border-black"
                         : sizeStock === 0
-                        ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                        : "border-gray-300 hover:border-gray-400"
+                          ? "border-gray-300 text-gray-400 cursor-not-allowed"
+                          : "border-gray-300 hover:border-gray-400"
                     }`}
                     onClick={() => sizeStock > 0 && setSelectedSize(size)}
                     disabled={sizeStock === 0}
@@ -727,7 +742,9 @@ const ProductDisplayPage = () => {
             {/* Show quantity selector only when not in cart */}
             {!cartQuantities[product.id] && (
               <div className="flex items-center justify-between sm:justify-start gap-4 p-2 sm:p-0">
-                <span className="text-sm font-semibold text-gray-700">Quantity:</span>
+                <span className="text-sm font-semibold text-gray-700">
+                  Quantity:
+                </span>
                 <div className="flex items-center gap-1">
                   <button
                     className="bg-gray-100 w-10 h-10 flex items-center justify-center rounded-l-lg hover:bg-gray-200 transition font-bold"
@@ -811,7 +828,9 @@ const ProductDisplayPage = () => {
       {/* Product Sections */}
       {product && product.allSections && product.allSections.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 px-1">Product Details</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 px-1">
+            Product Details
+          </h2>
           <div className="space-y-4 sm:space-y-8">
             {product.allSections.map((section, index) => (
               <div
@@ -860,8 +879,8 @@ const ProductDisplayPage = () => {
                   const imageArray = Array.isArray(images)
                     ? images
                     : images
-                    ? [images]
-                    : [];
+                      ? [images]
+                      : [];
 
                   return (
                     imageArray.length > 0 && (
@@ -880,7 +899,7 @@ const ProductDisplayPage = () => {
                                 alt={`${
                                   section.title || section.section_title
                                 } - Image ${imgIndex + 1}`}
-                                className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                                className="w-full h-48 object-fit hover:scale-105 transition-transform duration-300"
                                 onError={(e) => {
                                   e.target.style.display = "none";
                                 }}
@@ -901,7 +920,9 @@ const ProductDisplayPage = () => {
       {/* Related Products */}
       {relatedSections.length > 0 && (
         <div className="mt-10 sm:mt-16">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 px-1">You May Also Like</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 px-1">
+            You May Also Like
+          </h2>
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {relatedSections[0]?.items?.slice(0, 4).map((item) => (
               <ProductCard key={item.id} product={item} />

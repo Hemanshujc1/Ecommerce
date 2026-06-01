@@ -9,21 +9,44 @@ export function AuthProvider({ children }) {
   const [admin, setAdmin] = useState(null);     // admin user
   const [loading, setLoading] = useState(true);
 
-  // Restore session from localStorage on mount
+  // Restore session from localStorage on mount ONLY if cookies are still valid
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedAdmin = localStorage.getItem("admin");
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser);
-      setUser(parsed);
-      // Re-sync cookie in case it expired
-      document.cookie = `user=${encodeURIComponent(storedUser)}; path=/; max-age=86400; SameSite=Lax`;
+    const getCookie = (name) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : null;
+    };
+
+    const adminCookie = getCookie("admin");
+    if (adminCookie) {
+      try {
+        const parsed = JSON.parse(adminCookie);
+        setAdmin(parsed);
+      } catch (_) {
+        setAdmin(null);
+        localStorage.removeItem("admin");
+      }
+    } else {
+      setAdmin(null);
+      localStorage.removeItem("admin");
     }
-    if (storedAdmin) {
-      const parsed = JSON.parse(storedAdmin);
-      setAdmin(parsed);
-      document.cookie = `admin=${encodeURIComponent(storedAdmin)}; path=/; max-age=86400; SameSite=Lax`;
-    }    setLoading(false);
+
+    const userCookie = getCookie("user");
+    if (userCookie) {
+      try {
+        const parsed = JSON.parse(userCookie);
+        setUser(parsed);
+      } catch (_) {
+        setUser(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("userId");
+      }
+    } else {
+      setUser(null);
+      localStorage.removeItem("user");
+      localStorage.removeItem("userId");
+    }
+
+    setLoading(false);
   }, []);
 
   const loginUser = useCallback((userData) => {

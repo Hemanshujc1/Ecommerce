@@ -31,7 +31,7 @@ const page = () => {
           <Link href={`/users/BlogDetailPage/${blog.id}`} key={blog.id}>
             <div className="rounded-xl overflow-hidden shadow-lg bg-white hover:shadow-2xl transition h-full flex flex-col">
               <div className="relative h-48 sm:h-56 w-full">
-                <Image src={getImageUrl(blog.image)} alt={blog.title} fill className="object-cover" />
+                <Image src={getImageUrl(blog.image)} alt={blog.title} fill className="object-fit" />
               </div>
               <div className="p-4 flex flex-col gap-2 flex-1">
                 <p className="text-xs text-gray-500">{new Date(blog.date).toDateString()}</p>

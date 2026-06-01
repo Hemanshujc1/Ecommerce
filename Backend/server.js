@@ -6,7 +6,7 @@ const server = http.createServer(app);
 const { sequelize } = require("./models");
 
 // Sync the database (creates tables if they don't exist based on models)
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync().then(() => {
   console.log("Database & tables synced");
   server.listen(port, () => {
     console.log(`Example app listening on port ${port}`);

@@ -48,7 +48,7 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", upload.single("image"), async (req, res) => {
   const { id } = req.params;
   const { title,short_description, description, date } = req.body;
-  const image = req.file?.filename;
+  const image = req.file ? "/upload/blogs/" + req.file.filename : null;
 
   try {
     let query = "UPDATE blogs SET title = :title, short_description = :short_description, description = :description, date = :date";

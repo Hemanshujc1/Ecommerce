@@ -27,7 +27,6 @@ const ProductController = {
       brand,
       category,
       main_category,
-      sub_category,
       short_description,
     } = req.body;
 
@@ -36,7 +35,6 @@ const ProductController = {
       brand,
       category,
       main_category,
-      sub_category,
       short_description,
     };
 
@@ -111,7 +109,6 @@ const ProductController = {
       brand,
       category,
       main_category,
-      sub_category,
       short_description,
     } = req.body;
 
@@ -120,7 +117,6 @@ const ProductController = {
       brand,
       category,
       main_category,
-      sub_category,
       short_description,
     };
 

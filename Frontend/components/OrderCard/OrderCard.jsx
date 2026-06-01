@@ -67,7 +67,6 @@ const OrderCard = ({ userId }) => {
 
   const handleReturnExchange = async () => {
     try {
-      // First, get the full order details to access items
       const orderDetailsResponse = await getOrderById(selectedOrder.id);
       if (!orderDetailsResponse.success || !orderDetailsResponse.data.items) {
         alert('Unable to fetch order details. Please try again.');
@@ -76,8 +75,6 @@ const OrderCard = ({ userId }) => {
 
       const orderItems = orderDetailsResponse.data.items;
       
-      // For now, create a return/exchange request for the first item
-      // In a real application, you'd want to let the user select which items to return/exchange
       if (orderItems.length === 0) {
         alert('No items found in this order.');
         return;
@@ -110,27 +107,27 @@ const OrderCard = ({ userId }) => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'processing': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'shipped': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
-      case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      case 'returned': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-100';
+      case 'confirmed': return 'bg-blue-50 text-blue-700 border-blue-100';
+      case 'processing': return 'bg-purple-50 text-purple-700 border-purple-100';
+      case 'shipped': return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+      case 'delivered': return 'bg-green-50 text-green-700 border-green-100';
+      case 'cancelled': return 'bg-red-50 text-red-600 border-red-100';
+      case 'returned': return 'bg-gray-50 text-gray-700 border-gray-100';
+      default: return 'bg-gray-50 text-gray-705 border-gray-100';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': return <FaShippingFast className="w-4 h-4" />;
-      case 'confirmed': return <FaCheckCircle className="w-4 h-4" />;
-      case 'processing': return <FaShippingFast className="w-4 h-4" />;
-      case 'shipped': return <FaShippingFast className="w-4 h-4" />;
-      case 'delivered': return <FaCheckCircle className="w-4 h-4" />;
-      case 'cancelled': return <FaTimes className="w-4 h-4" />;
-      case 'returned': return <FaUndo className="w-4 h-4" />;
-      default: return <FaShippingFast className="w-4 h-4" />;
+      case 'pending': return <FaShippingFast className="w-3.5 h-3.5" />;
+      case 'confirmed': return <FaCheckCircle className="w-3.5 h-3.5" />;
+      case 'processing': return <FaShippingFast className="w-3.5 h-3.5" />;
+      case 'shipped': return <FaShippingFast className="w-3.5 h-3.5" />;
+      case 'delivered': return <FaCheckCircle className="w-3.5 h-3.5" />;
+      case 'cancelled': return <FaTimes className="w-3.5 h-3.5" />;
+      case 'returned': return <FaUndo className="w-3.5 h-3.5" />;
+      default: return <FaShippingFast className="w-3.5 h-3.5" />;
     }
   };
 
@@ -149,8 +146,9 @@ const OrderCard = ({ userId }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      <div className="flex flex-col justify-center items-center h-64 space-y-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+        <p className="text-sm text-gray-500 font-light">Loading orders...</p>
       </div>
     );
   }
@@ -158,30 +156,30 @@ const OrderCard = ({ userId }) => {
   return (
     <div className="space-y-6">
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-1.5 border-b border-gray-100 pb-4">
         {['all', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
           <button
             key={status}
             onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
               filter === status
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-black text-white'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-black'
             }`}
           >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status}
           </button>
         ))}
       </div>
 
       {filteredOrders.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">📦</div>
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Orders Yet</h3>
-          <p className="text-gray-500 mb-6">You haven't placed any orders yet.</p>
+        <div className="text-center py-16 border border-dashed border-gray-200 rounded-2xl">
+          <div className="text-gray-300 text-5xl mb-4">📦</div>
+          <h3 className="text-lg font-bold text-gray-900 mb-1">No Orders Found</h3>
+          <p className="text-xs text-gray-500 mb-6 font-light">You don't have any orders with this status filter.</p>
           <Link 
             href="/users/Products" 
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="inline-flex bg-black text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition"
           >
             Start Shopping
           </Link>
@@ -189,12 +187,14 @@ const OrderCard = ({ userId }) => {
       ) : (
         <div className="space-y-4">
           {filteredOrders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
-                    <p className="text-sm text-gray-500">
+            <div key={order.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition duration-200">
+              <div className="p-6 space-y-6">
+                
+                {/* Header Row */}
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4 border-b border-gray-100">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-gray-900">Order #{order.id}</h3>
+                    <p className="text-xs text-gray-500 font-light">
                       Placed on {new Date(order.created_at).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'long',
@@ -202,33 +202,35 @@ const OrderCard = ({ userId }) => {
                       })}
                     </p>
                   </div>
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(order.order_status)}`}>
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wide ${getStatusColor(order.order_status)}`}>
                     {getStatusIcon(order.order_status)}
                     {order.order_status}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Total Amount</p>
-                    <p className="text-lg font-semibold text-gray-900">₹{order.final_amount}</p>
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Amount</p>
+                    <p className="font-bold text-gray-900">₹{order.final_amount}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Payment Method</p>
-                    <p className="text-sm text-gray-900">{order.payment_method || 'N/A'}</p>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Payment Mode</p>
+                    <p className="font-bold text-gray-950 uppercase text-xs">{order.payment_method || 'N/A'}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Items</p>
-                    <p className="text-sm text-gray-900">{order.item_count || 0} item(s)</p>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Quantity</p>
+                    <p className="font-bold text-gray-900">{order.item_count || 0} item(s)</p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                {/* Actions Row */}
+                <div className="flex flex-wrap gap-2 pt-2">
                   <button
                     onClick={() => handleViewOrder(order.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-gray-800 transition active:scale-[0.98]"
                   >
-                    <FaEye className="w-4 h-4" />
+                    <FaEye />
                     View Details
                   </button>
                   
@@ -239,9 +241,9 @@ const OrderCard = ({ userId }) => {
                         setActionType('cancel');
                         setShowModal(true);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-red-50 text-red-600 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-red-100 transition active:scale-[0.98]"
                     >
-                      <FaTimes className="w-4 h-4" />
+                      <FaTimes />
                       Cancel Order
                     </button>
                   )}
@@ -254,9 +256,9 @@ const OrderCard = ({ userId }) => {
                           setActionType('return');
                           setShowModal(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-orange-50 text-orange-600 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-orange-100 transition active:scale-[0.98]"
                       >
-                        <FaUndo className="w-4 h-4" />
+                        <FaUndo />
                         Return
                       </button>
                       <button
@@ -265,92 +267,100 @@ const OrderCard = ({ userId }) => {
                           setActionType('exchange');
                           setShowModal(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-purple-50 text-purple-600 text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-purple-100 transition active:scale-[0.98]"
                       >
-                        <FaExchangeAlt className="w-4 h-4" />
+                        <FaExchangeAlt />
                         Exchange
                       </button>
                     </>
                   )}
                 </div>
+
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modern Overlay Modal */}
       {showModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">
-                  {actionType === 'view' ? 'Order Details' : 
-                   actionType === 'cancel' ? 'Cancel Order' :
-                   actionType === 'return' ? 'Return Order' : 'Exchange Order'}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setReason('');
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <FaTimes className="w-5 h-5" />
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
+          <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-xl font-bold tracking-tight text-gray-900">
+                {actionType === 'view' ? 'Order Details' : 
+                 actionType === 'cancel' ? 'Cancel Order' :
+                 actionType === 'return' ? 'Return Request' : 'Exchange Request'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setReason('');
+                }}
+                className="text-gray-400 hover:text-black p-1 transition"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
 
+            {/* Modal Scroll Content */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm text-black">
               {actionType === 'view' ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  
+                  {/* Grid details */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">Order ID</p>
-                      <p className="font-semibold">#{selectedOrder.id}</p>
+                      <p className="text-xs font-semibold text-gray-450 uppercase tracking-wider">Order ID</p>
+                      <p className="font-bold text-gray-900">#{selectedOrder.id}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(selectedOrder.order_status)}`}>
+                      <p className="text-xs font-semibold text-gray-450 uppercase tracking-wider">Status</p>
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wide mt-1 ${getStatusColor(selectedOrder.order_status)}`}>
                         {getStatusIcon(selectedOrder.order_status)}
                         {selectedOrder.order_status}
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Total Amount</p>
-                      <p className="font-semibold">₹{selectedOrder.final_amount}</p>
+                      <p className="text-xs font-semibold text-gray-450 uppercase tracking-wider">Total Amount</p>
+                      <p className="font-bold text-gray-900">₹{selectedOrder.final_amount}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Payment Method</p>
-                      <p className="font-semibold">{selectedOrder.payment_method || 'N/A'}</p>
+                      <p className="text-xs font-semibold text-gray-450 uppercase tracking-wider">Payment Mode</p>
+                      <p className="font-bold text-gray-900 uppercase text-xs mt-0.5">{selectedOrder.payment_method || 'N/A'}</p>
                     </div>
                   </div>
 
+                  {/* Shipping Address */}
                   {selectedOrder.shipping_address && (
-                    <div>
-                      <p className="text-sm text-gray-500 mb-2">Shipping Address</p>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p>{selectedOrder.shipping_address.full_name}</p>
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Shipping Address</p>
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 font-light text-gray-600 space-y-0.5">
+                        <p className="font-bold text-gray-800">{selectedOrder.shipping_address.full_name}</p>
                         <p>{selectedOrder.shipping_address.address_line_1}</p>
                         {selectedOrder.shipping_address.address_line_2 && (
                           <p>{selectedOrder.shipping_address.address_line_2}</p>
                         )}
                         <p>{selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.postal_code}</p>
-                        <p>{selectedOrder.shipping_address.phone}</p>
+                        <p className="mt-1 font-normal text-gray-700">Phone: {selectedOrder.shipping_address.phone}</p>
                       </div>
                     </div>
                   )}
 
+                  {/* Items list */}
                   {selectedOrder.items && selectedOrder.items.length > 0 && (
-                    <div>
-                      <p className="text-sm text-gray-500 mb-2">Order Items</p>
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Order Items</p>
                       <div className="space-y-2">
                         {selectedOrder.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                            <div>
-                              <p className="font-medium">{item.product_name || `Product ID: ${item.product_id}`}</p>
-                              <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                          <div key={index} className="flex justify-between items-center bg-gray-50 border border-gray-100 p-4 rounded-2xl">
+                            <div className="space-y-1">
+                              <p className="font-bold text-gray-950">{item.product_name || `Product ID: ${item.product_id}`}</p>
+                              <p className="text-xs text-gray-500 font-light">Quantity: {item.quantity}</p>
                             </div>
-                            <p className="font-semibold">₹{item.price}</p>
+                            <p className="font-black text-gray-900">₹{item.price}</p>
                           </div>
                         ))}
                       </div>
@@ -358,32 +368,32 @@ const OrderCard = ({ userId }) => {
                   )}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <p className="text-gray-600">
-                    {actionType === 'cancel' ? 'Please provide a reason for cancelling this order:' :
-                     actionType === 'return' ? 'Please provide a reason for returning this order:' :
-                     'Please provide a reason for exchanging this order:'}
+                <div className="space-y-6">
+                  <p className="text-gray-600 font-light leading-relaxed">
+                    {actionType === 'cancel' ? 'Please provide a valid reason for cancelling this order:' :
+                     actionType === 'return' ? 'Please choose the return reason for your refund request:' :
+                     'Please specify the reason for seeking a product exchange:'}
                   </p>
                   
                   {(actionType === 'return' || actionType === 'exchange') && (
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm text-blue-800 font-medium mb-2">
-                        Note: This will create a {actionType} request for the first item in your order.
+                    <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 space-y-1">
+                      <p className="text-xs text-blue-800 font-bold uppercase tracking-wider">
+                        Note: First Item Request
                       </p>
-                      <p className="text-xs text-blue-600">
-                        For multiple items, you may need to create separate requests.
+                      <p className="text-xs text-blue-700 font-light leading-normal">
+                        This action processes a {actionType} request for the primary item in your order.
                       </p>
                     </div>
                   )}
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Reason for {actionType}:
                     </label>
                     <select
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full p-4 border border-gray-200 rounded-2xl focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-gray-50/50 text-sm transition appearance-none"
                     >
                       <option value="">Select a reason...</option>
                       <option value="defective">Product is defective</option>
@@ -395,29 +405,30 @@ const OrderCard = ({ userId }) => {
                     </select>
                   </div>
                   
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-2">
                     <button
                       onClick={() => {
                         setShowModal(false);
                         setReason('');
                       }}
-                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                      className="flex-1 px-4 py-3.5 border border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-700 rounded-2xl hover:bg-gray-50 transition"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={actionType === 'cancel' ? handleCancelOrder : handleReturnExchange}
                       disabled={!reason.trim()}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 px-4 py-3.5 bg-black text-white text-xs font-bold uppercase tracking-wider rounded-2xl hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                     >
                       {actionType === 'cancel' ? 'Cancel Order' :
-                       actionType === 'return' ? 'Submit Return Request' :
-                       'Submit Exchange Request'}
+                       actionType === 'return' ? 'Submit Return' :
+                       'Submit Exchange'}
                     </button>
                   </div>
                 </div>
               )}
             </div>
+
           </div>
         </div>
       )}

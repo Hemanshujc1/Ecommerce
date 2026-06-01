@@ -27,13 +27,29 @@ export const clearAdminSession = () => {
   document.cookie = "admin=; path=/; max-age=0";
 };
 
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+};
+
 export const getUserId = () => {
   if (typeof window === "undefined") return null;
+  if (!getCookie("user")) {
+    localStorage.removeItem("user");
+    localStorage.removeItem("userId");
+    return null;
+  }
   return localStorage.getItem("userId") || null;
 };
 
 export const getUser = () => {
   if (typeof window === "undefined") return null;
+  if (!getCookie("user")) {
+    localStorage.removeItem("user");
+    localStorage.removeItem("userId");
+    return null;
+  }
   try {
     const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
@@ -44,6 +60,10 @@ export const getUser = () => {
 
 export const getAdmin = () => {
   if (typeof window === "undefined") return null;
+  if (!getCookie("admin")) {
+    localStorage.removeItem("admin");
+    return null;
+  }
   try {
     const raw = localStorage.getItem("admin");
     return raw ? JSON.parse(raw) : null;

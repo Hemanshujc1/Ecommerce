@@ -18,7 +18,7 @@ const Page = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-   // setError("");
+    // setError("");
 
     try {
       const res = await fetch(`${API_BASE_URL}/users/register`, {
@@ -49,17 +49,19 @@ const Page = () => {
         {/* Left Image */}
         <div className="relative w-1/2 hidden md:block">
           <Image
-          width={300}
-          height={200}
+            width={300}
+            height={200}
             src="/images/post-image9.jpg"
             alt="Register Side Image"
-            className="object-cover w-full h-full"
+            className="object-fit w-full h-full"
           />
         </div>
 
         {/* Right Form Section */}
         <div className="w-full md:w-1/2 p-10 flex flex-col justify-center">
-          <h2 className="text-3xl font-semibold text-black mb-4">Create Your Account</h2>
+          <h2 className="text-3xl font-semibold text-black mb-4">
+            Create Your Account
+          </h2>
           <p className="text-gray-600 mb-6">
             Register to access exclusive deals, collections, and updates.
           </p>
@@ -115,9 +117,7 @@ const Page = () => {
 
             {/* Age */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Age
-              </label>
+              <label className="text-sm font-medium text-gray-700">Age</label>
               <input
                 id="age"
                 type="number"
@@ -173,7 +173,10 @@ const Page = () => {
             {/* Link */}
             <div className="text-sm text-center text-gray-500">
               Already have an account?{" "}
-              <Link href="/usersAuth/login" className="text-black hover:underline">
+              <Link
+                href="/usersAuth/login"
+                className="text-black hover:underline"
+              >
                 Login
               </Link>
             </div>

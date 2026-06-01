@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/lib/api.config";
+import { getImageUrl } from "@/lib/image.helper";
 
 const EditLandingPage = () => {
   const [landingTitle, setLandingTitle] = useState("");
@@ -11,14 +12,30 @@ const EditLandingPage = () => {
   const [showProductSelector, setShowProductSelector] = useState(null);
   const [saveMessage, setSaveMessage] = useState("");
 
+  // Word limit helper functions
+  const countWords = (text) => {
+    if (!text) return 0;
+    const clean = text.trim().replace(/\s+/g, ' ');
+    return clean ? clean.split(' ').length : 0;
+  };
+
+  const enforceWordLimit = (value, limit) => {
+    const wordCount = countWords(value);
+    if (wordCount > limit) {
+      const words = value.split(/\s+/);
+      return words.slice(0, limit).join(" ");
+    }
+    return value;
+  };
+
   // Fetch available products
   const fetchAvailableProducts = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/products`);
       const data = await res.json();
       if (data.success) {
-        setAvailableProducts(data.products || []);
-        setFilteredProducts(data.products || []);
+        setAvailableProducts(data.data || []);
+        setFilteredProducts(data.data || []);
       }
     } catch (err) {
       console.error("Failed to fetch products", err);
@@ -33,7 +50,9 @@ const EditLandingPage = () => {
     }
 
     // Check if product is already added
-    const isAlreadyAdded = collections.some(col => col.productId === product.id);
+    const isAlreadyAdded = collections.some(
+      (col) => col.productId === product.id,
+    );
     if (isAlreadyAdded) {
       alert("This product is already added as a collection!");
       return;
@@ -43,7 +62,9 @@ const EditLandingPage = () => {
     const newCollection = {
       productId: product.id,
       title: product.product_name || "",
-      description: product.short_description || `Discover our amazing ${product.product_name} collection`,
+      description:
+        product.short_description ||
+        `Discover our amazing ${product.product_name} collection`,
       img: product.main_image || "",
       price: product.price || 0,
       discount: product.discount || 0,
@@ -57,7 +78,9 @@ const EditLandingPage = () => {
 
   // Remove collection
   const handleRemoveCollection = (index) => {
-    const confirmed = window.confirm("Are you sure you want to remove this collection?");
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this collection?",
+    );
     if (!confirmed) return;
 
     const updated = collections.filter((_, i) => i !== index);
@@ -87,7 +110,7 @@ const EditLandingPage = () => {
   const handleSave = async () => {
     try {
       setSaveMessage("Saving changes...");
-      
+
       const res = await fetch(`${API_BASE_URL}/landing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,7 +135,9 @@ const EditLandingPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/landing`);
+        const res = await fetch(`${API_BASE_URL}/landing?t=${Date.now()}`, {
+          cache: "no-store",
+        });
         const data = await res.json();
         setLandingTitle(data.title || "");
         setLandingDescription(data.description || "");
@@ -121,33 +146,47 @@ const EditLandingPage = () => {
         console.error("Failed to fetch landing page data", err);
       }
     };
-    
+
     fetchData();
     fetchAvailableProducts();
   }, []);
-  
-  
-  
 
   return (
     <div className="p-3 md:p-6 max-w-4xl w-full space-y-6">
       <h1 className="text-lg md:text-2xl font-bold">Edit Landing Page</h1>
 
-      <div className="bg-white p-4 rounded shadow space-y-4">
-        <input
-          type="text"
-          value={landingTitle}
-          onChange={(e) => setLandingTitle(e.target.value)}
-          className="w-full p-2 border rounded"
-          placeholder="Landing Page Title"
-        />
-        <textarea
-          value={landingDescription}
-          onChange={(e) => setLandingDescription(e.target.value)}
-          rows={4}
-          className="w-full p-2 border rounded"
-          placeholder="Landing Description"
-        />
+      <div className="bg-white p-4 rounded shadow space-y-6">
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-semibold text-gray-700">Landing Page Title</label>
+            <span className={`text-xs font-medium ${countWords(landingTitle) >= 10 ? "text-red-500 font-bold" : "text-gray-400"}`}>
+              {countWords(landingTitle)} / 10 words
+            </span>
+          </div>
+          <input
+            type="text"
+            value={landingTitle}
+            onChange={(e) => setLandingTitle(enforceWordLimit(e.target.value, 10))}
+            className="w-full p-2 border rounded"
+            placeholder="Landing Page Title"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-semibold text-gray-700">Landing Description</label>
+            <span className={`text-xs font-medium ${countWords(landingDescription) >= 35 ? "text-red-500 font-bold" : "text-gray-400"}`}>
+              {countWords(landingDescription)} / 35 words
+            </span>
+          </div>
+          <textarea
+            value={landingDescription}
+            onChange={(e) => setLandingDescription(enforceWordLimit(e.target.value, 35))}
+            rows={4}
+            className="w-full p-2 border rounded resize-none"
+            placeholder="Landing Description"
+          />
+        </div>
       </div>
 
       {/* Save Message */}
@@ -159,7 +198,9 @@ const EditLandingPage = () => {
 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Collection Cards ({collections.length}/10)</h2>
+          <h2 className="text-xl font-semibold">
+            Collection Cards ({collections.length}/10)
+          </h2>
           <button
             onClick={openProductSelector}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -170,7 +211,8 @@ const EditLandingPage = () => {
 
         {collections.length === 0 ? (
           <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded">
-            No collections added yet. Click "Add Product Collection" to select products.
+            No collections added yet. Click "Add Product Collection" to select
+            products.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -185,11 +227,11 @@ const EditLandingPage = () => {
                     <img
                       src={getImageUrl(col.img)}
                       alt={col.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-fit"
                     />
                   </div>
                 )}
-                
+
                 <div className="space-y-3">
                   {/* Collection Title */}
                   <input
@@ -199,20 +241,26 @@ const EditLandingPage = () => {
                       handleCollectionChange(index, "title", e.target.value)
                     }
                     placeholder="Collection Title"
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+                    disabled
                   />
-                  
+
                   {/* Collection Description */}
                   <textarea
                     value={col.description}
                     onChange={(e) =>
-                      handleCollectionChange(index, "description", e.target.value)
+                      handleCollectionChange(
+                        index,
+                        "description",
+                        e.target.value,
+                      )
                     }
                     placeholder="Collection Description"
                     rows={3}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 resize-none"
+                    disabled
                   />
-                  
+
                   {/* Price Info */}
                   <div className="flex items-center gap-2">
                     <div className="text-lg font-bold text-green-600">
@@ -224,12 +272,12 @@ const EditLandingPage = () => {
                       </span>
                     )}
                   </div>
-                  
+
                   {/* Product ID Reference */}
                   <div className="text-xs text-gray-500">
                     Product ID: {col.productId}
                   </div>
-                  
+
                   {/* Remove Button */}
                   <button
                     onClick={() => handleRemoveCollection(index)}
@@ -275,9 +323,12 @@ const EditLandingPage = () => {
                 className="w-full p-3 border border-gray-300 rounded-lg"
                 onChange={(e) => {
                   const searchTerm = e.target.value.toLowerCase();
-                  const filtered = availableProducts.filter(product =>
-                    product.product_name?.toLowerCase().includes(searchTerm) ||
-                    product.brand?.toLowerCase().includes(searchTerm)
+                  const filtered = availableProducts.filter(
+                    (product) =>
+                      product.product_name
+                        ?.toLowerCase()
+                        .includes(searchTerm) ||
+                      product.brand?.toLowerCase().includes(searchTerm),
                   );
                   setFilteredProducts(filtered);
                 }}
@@ -286,16 +337,21 @@ const EditLandingPage = () => {
 
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {(filteredProducts.length > 0 ? filteredProducts : availableProducts).map((product) => {
-                const isAlreadySelected = collections.some(col => col.productId === product.id);
-                
+              {(filteredProducts.length > 0
+                ? filteredProducts
+                : availableProducts
+              ).map((product) => {
+                const isAlreadySelected = collections.some(
+                  (col) => col.productId === product.id,
+                );
+
                 return (
                   <div
                     key={product.id}
                     className={`border rounded-lg p-4 transition ${
-                      isAlreadySelected 
-                        ? 'border-green-500 bg-green-50' 
-                        : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                      isAlreadySelected
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                     }`}
                   >
                     {/* Product Image */}
@@ -304,7 +360,7 @@ const EditLandingPage = () => {
                         <img
                           src={getImageUrl(product.main_image)}
                           alt={product.product_name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-fit"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -318,7 +374,9 @@ const EditLandingPage = () => {
                       <h4 className="font-semibold text-gray-800 text-sm line-clamp-2 mb-1">
                         {product.product_name}
                       </h4>
-                      <p className="text-sm text-gray-600 mb-1">{product.brand}</p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        {product.brand}
+                      </p>
                       <p className="text-lg font-bold text-green-600">
                         ₹{product.price}
                       </p>
@@ -339,11 +397,13 @@ const EditLandingPage = () => {
                       disabled={isAlreadySelected}
                       className={`w-full py-2 px-4 rounded text-sm font-medium transition ${
                         isAlreadySelected
-                          ? 'bg-green-500 text-white cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                          ? "bg-green-500 text-white cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
                       }`}
                     >
-                      {isAlreadySelected ? '✓ Already Added' : 'Add as Collection'}
+                      {isAlreadySelected
+                        ? "✓ Already Added"
+                        : "Add as Collection"}
                     </button>
                   </div>
                 );

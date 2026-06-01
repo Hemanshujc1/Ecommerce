@@ -24,31 +24,41 @@ const BlogPost = () => {
   }, []);
 
   return (
-    <div className="px-4 sm:px-6 lg:px-10">
+    <div className="px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto w-full">
       <div className="flex justify-between items-center text-black mb-6">
-        <h2 className="text-lg sm:text-xl font-bold">Read Blog Posts</h2>
+        <h2 className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900 uppercase">Read Blog Posts</h2>
         <Link href="/users/Blogs">
-          <button className="text-sm underline font-semibold hover:opacity-70">VIEW ALL</button>
+          <button className="text-xs text-gray-400 hover:text-black hover:underline font-bold uppercase tracking-widest transition">
+            VIEW ALL
+          </button>
         </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {blogs.map((blog) => (
           <Link href={`/users/BlogDetailPage/${blog.id}`} key={blog.id}>
-            <div className="rounded-xl overflow-hidden shadow-lg bg-white hover:shadow-2xl transition h-full flex flex-col">
-              <div className="relative h-48 sm:h-56 w-full flex-shrink-0">
+            <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-white hover:shadow-md transition-all duration-305 h-full flex flex-col group cursor-pointer">
+              <div className="relative h-48 sm:h-56 w-full flex-shrink-0 overflow-hidden bg-gray-50">
                 <Image
                   src={getImageUrl(blog.image)}
                   alt={blog.title}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
-              <div className="p-4 flex flex-col gap-2 flex-1">
-                <p className="text-xs text-gray-500">{new Date(blog.date).toDateString()}</p>
-                <h2 className="text-base sm:text-lg font-semibold line-clamp-2">{blog.title}</h2>
-                <p className="text-sm text-gray-600 line-clamp-3 flex-1">{blog.short_description}</p>
-                <span className="mt-2 text-blue-600 hover:underline text-sm font-medium">Read More →</span>
+              <div className="p-5 flex flex-col gap-2 flex-grow text-black">
+                <p className="text-xs text-gray-400">
+                  {new Date(blog.date).toDateString()}
+                </p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {blog.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed line-clamp-3 flex-grow">
+                  {blog.short_description}
+                </p>
+                <span className="mt-4 text-xs font-bold uppercase tracking-widest text-black group-hover:underline flex items-center gap-1">
+                  Read More <span className="transition-transform group-hover:translate-x-1">→</span>
+                </span>
               </div>
             </div>
           </Link>

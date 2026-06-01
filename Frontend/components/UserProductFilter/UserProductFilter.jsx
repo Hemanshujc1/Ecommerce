@@ -42,8 +42,8 @@ const UserProductFilter = ({
   ];
 
   return (
-    <div className="bg-white border-b border-gray-200 sticky top-0 lg:top-[80px] z-40 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
+    <div className="bg-white/85 backdrop-blur-md border-b border-gray-100 sticky top-0 lg:top-[80px] z-40 shadow-sm transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-5">
         {/* Mobile Search Bar */}
         <div className="relative mb-3 sm:mb-4 lg:hidden">
           <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -52,12 +52,12 @@ const UserProductFilter = ({
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-gray-50 text-sm"
+            className="w-full pl-10 pr-10 py-2.5 border border-gray-250 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent bg-gray-50 text-sm"
           />
           {searchTerm && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-655 p-1"
             >
               <FaTimes className="w-3 h-3" />
             </button>
@@ -69,7 +69,7 @@ const UserProductFilter = ({
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all text-sm font-medium shadow-sm active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 bg-black text-white rounded-xl hover:bg-gray-800 transition-all text-xs font-bold uppercase tracking-wider shadow-sm active:scale-95"
             >
               <FaFilter className="w-3 h-3" />
               <span>Filters</span>
@@ -80,7 +80,7 @@ const UserProductFilter = ({
               />
             </button>
 
-            <div className="text-xs sm:text-sm text-gray-500 font-medium ml-1">
+            <div className="text-xs sm:text-sm text-gray-400 font-bold uppercase tracking-wider ml-1">
               <span className="text-gray-900">{filteredProducts}</span> /{" "}
               {totalProducts} products
             </div>
@@ -88,13 +88,13 @@ const UserProductFilter = ({
 
           {/* Sort Dropdown */}
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-              Sort:
+            <span className="text-xs font-extrabold text-gray-400 uppercase tracking-widest">
+              Sort By:
             </span>
             <select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value)}
-              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium text-gray-700 min-w-[140px]"
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-xs font-bold uppercase tracking-wider text-gray-700 min-w-[160px] cursor-pointer shadow-sm"
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>

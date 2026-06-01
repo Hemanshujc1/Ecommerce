@@ -12,7 +12,9 @@ const page = () => {
   useEffect(() => {
     const fetchProductSections = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/home-products`);
+        const res = await fetch(`${API_BASE_URL}/home-products?t=${Date.now()}`, {
+          cache: "no-store"
+        });
         const data = await res.json();
 
         const transformed = (data.sections || []).map((section) => ({

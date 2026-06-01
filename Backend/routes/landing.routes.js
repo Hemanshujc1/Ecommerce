@@ -28,7 +28,43 @@ router.get("/landing", async (req, res) => {
     const config = await SiteConfiguration.findOne({ where: { key: 'landing_page' } });
     if (!config) return res.status(404).json({ message: "No landing page configuration found" });
 
-    res.json(config.value);
+    // Parse the data safely
+    let data = config.value || {};
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (e) {}
+    }
+
+    // Hydrate collections
+    if (data.collections && Array.isArray(data.collections)) {
+      const { Product, ProductVariant } = require("../models");
+      const populatedCollections = [];
+      
+      for (let c of data.collections) {
+        if (!c.productId) continue;
+        
+        const productDB = await Product.findByPk(c.productId, {
+          include: [{ model: ProductVariant, as: 'variants' }]
+        });
+        
+        if (productDB) {
+          const variant = productDB.variants && productDB.variants[0] ? productDB.variants[0] : {};
+          
+          populatedCollections.push({
+            productId: productDB.id,
+            title: productDB.product_name,
+            img: variant.main_image || c.img || "",
+            price: variant.price ? variant.price : c.price || "",
+            discount: variant.discount || c.discount || 0,
+            description: productDB.short_description || c.description || "",
+          });
+        }
+      }
+      data.collections = populatedCollections;
+    }
+
+    res.json(data);
   } catch (err) {
     console.error("GET /landing error:", err);
     res.status(500).json({ error: "Server error" });
@@ -40,10 +76,15 @@ router.post("/landing", async (req, res) => {
   const { title, description, collections } = req.body;
 
   try {
+    // Clean up unnecessary data to store only IDs
+    const cleanedCollections = (collections || []).slice(0, 10).map(c => ({
+      productId: c.productId
+    }));
+
     const landingData = {
       title,
       description,
-      collections: collections.slice(0, 10)
+      collections: cleanedCollections
     };
 
     const [config, created] = await SiteConfiguration.findOrCreate({

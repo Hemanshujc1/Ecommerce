@@ -49,9 +49,9 @@ const UserNavbar = () => {
               alt="logo"
               className="lg:w-[80px] lg:h-[80px]"
             />
-            <div className="flex flex-col font-extrabold">
-              <h3 className="text-base lg:text-lg">Ecommerce Website</h3>
-              <p className="text-xs lg:text-sm font-normal hidden sm:block">Lorem ipsum dolor sit.</p>
+            <div className="flex flex-col font-extrabold text-black">
+              <h3 className="text-base lg:text-lg tracking-wider">AURA E-Store</h3>
+              <p className="text-[10px] lg:text-[11px] font-semibold text-gray-400 hidden sm:block tracking-widest uppercase">Elevating Modern Living</p>
             </div>
           </div>
         </Link>

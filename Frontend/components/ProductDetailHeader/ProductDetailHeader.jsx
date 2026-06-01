@@ -10,12 +10,6 @@ const ProductDetailHeader = ({product}) => {
           <p className="text-gray-500">
             Brand: <span className="text-black font-medium">{product.brand}</span>
           </p>
-          <div className="flex items-center text-yellow-600 font-semibold">
-            ⭐ {product.rating} 
-            <span className="text-gray-400 font-normal ml-1">
-              ({product.ratingsCount} ratings)
-            </span>
-          </div>
         </div>
     </div>
   )

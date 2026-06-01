@@ -15,6 +15,10 @@ const {
 } = require("./order.model");
 const UserInteraction = require("./userInteraction.model");
 
+// Define associations that cross files
+UserInteraction.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+Product.hasMany(UserInteraction, { foreignKey: 'product_id', as: 'interactions' });
+
 // Export all models and the sequelize instance
 module.exports = {
   sequelize,
